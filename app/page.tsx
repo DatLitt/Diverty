@@ -182,8 +182,20 @@ export default function Home() {
       const meanRets = meanReturns(returns);
       const covMat = covarianceMatrix(returns);
 
+      const minWeights = [0, 0, 0, 0.3, 0, 0, 0]; // Minimum weights for each stock
+      //const maxWeights = [0.3, 0.4, 0.2, 0.25, 0.35]; // Maximum weights for each stock
+
       const bestPortfolio = geneticOptimization(
-        meanRets, covMat, 500, 100, 0.1, 0.012, "returnConstrained");
+        meanRets,
+        covMat,
+        500, // populationSize
+        100, // generations
+        0.1, // mutationRate
+        0.05, // constraint (risk or return)
+        "riskConstrained", // strategy
+        minWeights, // individual minimum weights
+        //maxWeights // individual maximum weights
+      );
       const stockName = stocks.map((obj: Stock) => obj.ticker);
 
       const result = stockName.map((ticker: string, i: number) => ({
