@@ -34,7 +34,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   // const data = await getTrendingStocks("US"); // Prefetch on server!
-  const stocks = {symbol: "asd", shortName: "asd"};
+  // const stocks = {symbol: "asd", shortName: "asd"};
   return (
     
     <html lang="en">

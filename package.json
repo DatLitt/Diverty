@@ -21,6 +21,7 @@
     "recharts": "^2.15.1",
     "seedrandom": "^3.0.5",
     "styled-components": "^6.1.16",
+    "swr": "^2.3.3",
     "vis-network": "^9.1.9",
     "yahoo-finance2": "^2.13.3"
   },

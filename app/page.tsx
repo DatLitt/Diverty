@@ -3,6 +3,8 @@
 // import { useEffect, useState } from "react";
 // import Stock from "../types/test"
 
+import Link from "next/link";
+
 // // async function getTrendingStocks() {
 // //   const res = await fetch(`/api/search`, {
 // //     cache: "force-cache", // Cache result, fetch only once
@@ -138,136 +140,14 @@
 //   </Wrapper>
 //   );
 // }
-"use client";
-import { useEffect, useState } from "react";
-import styled from "styled-components";
-import {
-  calculateReturns,
-  meanReturns,
-  covarianceMatrix,
-  portfolioMetrics,
-  calculateCorrelation,
-} from "../app/utils/mpt";
-import { geneticOptimization } from "./utils/optimizer";
-import { index } from "mathjs";
-import CorrelationHeatmap from "./components/correlationHeatmap";
-import Stock from "@/types/test";
 
-const Container = styled.div`
-  padding: 2rem;
-`;
-const Table = styled.table`
-  margin-top: 2rem;
-  border-collapse: collapse;
-  width: 100%;
-`;
-const ThTd = styled.td`
-  border: 1px solid #ccc;
-  padding: 8px;
-`;
+
 
 export default function Home() {
-  const [stocks, setStocks] = useState<Stock[]>([]);
-  const [result, setResult] = useState<any>(null);
-  const [correlation, setCorrelation] = useState<number[][]>([]);
-
-  useEffect(() => {
-    async function fetchData() {
-      const res = await fetch("/api/stocks");
-      const { stocks } = await res.json();
-
-      setStocks(stocks);
-
-      const returns = calculateReturns(stocks);
-      const meanRets = meanReturns(returns);
-      const covMat = covarianceMatrix(returns);
-
-      const minWeights = [0, 0, 0, 0.3, 0, 0, 0]; // Minimum weights for each stock
-      //const maxWeights = [0.3, 0.4, 0.2, 0.25, 0.35]; // Maximum weights for each stock
-
-      const bestPortfolio = geneticOptimization(
-        meanRets,
-        covMat,
-        500, // populationSize
-        100, // generations
-        0.1, // mutationRate
-        0.05, // constraint (risk or return)
-        "riskConstrained", // strategy
-        minWeights, // individual minimum weights
-        //maxWeights // individual maximum weights
-      );
-      const stockName = stocks.map((obj: Stock) => obj.ticker);
-
-      const result = stockName.map((ticker: string, i: number) => ({
-        ticker,
-        weight: bestPortfolio.weights[i],
-      }));
-      const correlationMatrix = calculateCorrelation(returns);
-      setCorrelation(correlationMatrix);
-      console.log("Correlation Matrix:", correlationMatrix); // Add this line
-      console.log("Stocks:", stocks); // Add this line
-      console.log(result);
-      console.log("Max Mean Return:", bestPortfolio!.meanReturn);
-      console.log("Std Dev:", bestPortfolio!.stdDev);
-
-      const weights = Array(stocks.length).fill(1 / stocks.length);
-      const metrics = portfolioMetrics(weights, meanRets, covMat);
-
-      setResult({ meanRets, covMat, weights, ...metrics });
-    }
-    fetchData();
-  }, []);
-
+  console.log("Home");
   return (
-    <Container>
-      <h1>Modern Portfolio Optimizer</h1>
-      {result && (
-        <>
-          <p>Mean Returns: {JSON.stringify(result.meanRets)}</p>
-          <p>Covariance Matrix: {JSON.stringify(result.covMat)}</p>
-          <p>Weights: {JSON.stringify(result.weights)}</p>
-          <p>Expected Return: {result.expectedReturn.toFixed(4)}</p>
-          <p>Portfolio Std Dev: {result.stdDev.toFixed(4)}</p>
-        </>
-      )}
-
-      {/* Add the heatmap here */}
-      {correlation && correlation.length > 0 && stocks.length > 0 && (
-        <CorrelationHeatmap
-          correlationMatrix={correlation}
-          stockNames={stocks.map((stock) => stock.ticker!)}
-        />
-      )}
-
-      {/* Display Stock Data */}
-      {stocks.map((stock) => (
-        <div key={stock.ticker}>
-          <h2>{stock.ticker}</h2>
-          <Table>
-            <thead>
-              <tr>
-                <ThTd>Date</ThTd>
-                <ThTd>Close</ThTd>
-                <ThTd>Change %</ThTd>
-              </tr>
-            </thead>
-            <tbody>
-              {stock.data?.map(
-                (
-                  d: any,
-                  idx: number // Last 10 weeks
-                ) => (
-                  <tr key={idx}>
-                    <ThTd>{new Date(d.date).toLocaleDateString()}</ThTd>
-                    <ThTd>{d.close.toFixed(2)}</ThTd>
-                    <ThTd>{d.changePercent.toFixed(2)}%</ThTd>
-                  </tr>
-                )
-              )}
-            </tbody>
-          </Table>
-        </div>
-      ))}
-    </Container>
+      <Link href="/portfolio">
+        Portfolio
+        </Link>
   );
 }
