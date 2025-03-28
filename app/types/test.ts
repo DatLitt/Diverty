@@ -1,4 +1,4 @@
-export default interface Stock {
+export interface Stock {
   ticker?: string;
   data?: { changePercent: number,
     date: Date,
@@ -6,4 +6,11 @@ export default interface Stock {
    }[]; 
   symbol?: string;
   shortName?: string;
+}
+
+export interface Portfolio {
+  weights: number[];
+  meanReturn: number;
+  stdDev: number;
+  fitness: number;
 }
