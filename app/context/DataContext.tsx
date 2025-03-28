@@ -1,5 +1,5 @@
 'use client';
-import Stock from '@/types/test';
+import Stock from '../types/test';
 import { createContext, useContext, useState } from 'react';
 
 type DataContextType = {

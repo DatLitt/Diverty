@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getStockData } from '@/app/lib/getData';
+import { getStockData } from '../../lib/getData';
 
 export const revalidate = 3600; // Cache for 1 hour
 
