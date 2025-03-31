@@ -1,10 +1,8 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useData } from "../context/DataContext";
-import Link from "next/link";
-import {Stock} from "../types/test";
-import { calculateReturns, meanReturns, covarianceMatrix } from "../utils/mpt";
-import { geneticOptimization } from "../utils/optimizer";
+import { calculate } from "../utils/calculatePortfolio";
+import styles from "./page.module.css";
 
 
 export default function Portfolio() {
@@ -13,93 +11,7 @@ export default function Portfolio() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    console.log("Component mounted", new Date().toISOString());
-    return () => {
-      console.log("Component unmounted", new Date().toISOString());
-    };
-  }, [data]);
-  const calculate = async (data: Stock[]) => {
-    console.log("Calculating portfolio...");
-    if (!data || !Array.isArray(data) || data.length === 0) {
-      console.log("No data available for calculations");
-      return null;
-    }
-
-    try {
-      // Validate that all stocks have data
-      const validData = data.every(
-        (stock) =>
-          stock &&
-          stock.data &&
-          Array.isArray(stock.data) &&
-          stock.data.length > 0
-      );
-
-      if (!validData) {
-        console.log("Invalid stock data structure");
-        return null;
-      }
-
-      const returns = calculateReturns(data);
-
-      // Validate returns calculation
-      if (!returns || returns.length === 0) {
-        console.log("Failed to calculate returns");
-        return null;
-      }
-
-      const meanRets = meanReturns(returns);
-      const covMat = covarianceMatrix(returns);
-
-      // Validate matrix dimensions
-      if (meanRets.length !== data.length || covMat.length !== data.length) {
-        console.log("Matrix dimension mismatch");
-        return null;
-      }
-
-      const minWeights = [0,0,0,0,0,0,0];
-      const maxWeights = [1,1,1,1,1,1,1];
-
-      const bestPortfolio = geneticOptimization(
-        meanRets,
-        covMat,
-        500,
-        100,
-        0.1,
-        0.06,
-        "riskConstrained",
-        minWeights,
-        maxWeights
-      );
-
-      if (!bestPortfolio) {
-        console.log("Optimization failed");
-        return null;
-      }
-      // setBest(bestPortfolio);
-
-      const stockName = data
-        .map((obj: Stock) => obj.ticker)
-        .filter(
-          (ticker): ticker is string => ticker !== undefined && ticker !== null
-        );
-
-      const result = stockName.map((ticker: string, i: number) => ({
-        ticker,
-        weight: bestPortfolio.weights[i],
-      }));
-      console.log("Portfolio calculation result:", result);
-      console.log("Best Portfolio:", bestPortfolio);
-      setResults(result);
-      setPortfolio(bestPortfolio);
-      return { result, bestPortfolio };
-    } catch (error) {
-      console.error("Portfolio calculation error:", error);
-      return null;
-    }
- 
-  }
+  
   
   const handleFetch = async () => {
     setIsLoading(true);
@@ -111,11 +23,9 @@ export default function Portfolio() {
       if (!res.ok) throw new Error("Failed to fetch");
       const jsonData = await res.json();
       setData(jsonData.stocks);
-      await calculate(jsonData.stocks);
-
-     
-       
-      
+      const results = await calculate(jsonData.stocks);
+      setResults(results?.result ?? []);
+      setPortfolio(results?.bestPortfolio ?? bestPortfolio);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "An unknown error occurred"
@@ -128,8 +38,16 @@ export default function Portfolio() {
   
   
   return (
-    <div>
-      <h1>Modern Portfolio Optimizer</h1>
+    <div className={styles.container}>
+      <div className={styles.upperBox}></div>
+      <div className={styles.lowerBox}>
+        
+      </div>
+
+    </div>
+  );
+}
+      {/* <h1>Modern Portfolio Optimizer</h1>
       <button
         onClick={handleFetch}
         disabled={isLoading}
@@ -203,7 +121,5 @@ export default function Portfolio() {
           <p><strong>Sharpe Ratio:</strong> {bestPortfolio.fitness.toFixed(4)}</p>
         </div>
       </div>
-    )}
-    </div>
-  );
-}
+    )} */}
+
