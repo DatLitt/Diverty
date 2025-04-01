@@ -1,10 +1,9 @@
 :root {
-  --white: #F2F2F2;
-    --black: #000B10;
-    --neutral-200: #A8BBC2;
-    --blue-2: #1019C1;  
+  --white: #f2f2f2;
+  --black: #000b10;
+  --neutral-200: #a8bbc2;
+  --blue-2: #1019c1;
 }
-
 
 html,
 body {
@@ -31,8 +30,8 @@ body {
 
 /* Hide scrollbar for IE, Edge and Firefox */
 html {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 * {

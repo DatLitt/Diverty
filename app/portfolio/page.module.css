@@ -1,19 +1,61 @@
 .container {
-    width: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
-.upperBox {
-    border: 1px solid #ccc;
-    width: 100%;
-    height:calc(100vh - 100px);
-    background-color: var(--neutral-200);
+.step1Box {
+  width: 100%;
+  height: calc(100vh - 100px);
+  display: flex;
+  gap: 20px;
+}
+.selectBox {
+  background: var(--neutral-200);
+  width: 30%;
+  height: 100%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.searchWrapper {
+  width: 100%;
+  display: flex;
+  gap: 20px;
+}
+.searchWrapper input {
+  flex: 1;
+  height: 40px;
+  background-color: var(--white);
+  border: none;
+  border-radius: 5px;
+}
+.searchWrapper button {
+  border: none;
+  border-radius: 5px;
+  height: 40px;
+  width: 80px;
+}
+.selectBox ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+  border: 1px solid black;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.setupBox {
+  background: var(--neutral-200);
+  width: 70%;
+  height: 100%;
 }
 
-.lowerBox {
+.step2Box {
   border: 1px solid #ccc;
   width: 100%;
 }

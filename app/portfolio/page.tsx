@@ -1,53 +1,65 @@
 "use client";
 import { useState } from "react";
 import { useData } from "../context/DataContext";
+import yahooFinance from "yahoo-finance2"; // ✅ Correct import
 import { calculate } from "../utils/calculatePortfolio";
 import styles from "./page.module.css";
 
-
 export default function Portfolio() {
-  const { data, result, bestPortfolio, setData, setResults, setPortfolio } = useData();
-  const [best, setBest] = useState<any>(null);
+  const { setData, setResults, setPortfolio } = useData();
+  const [searchQuery, setSearchQuery] = useState("Apple");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  
-  
-  const handleFetch = async () => {
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/stocks", {
-        next: { revalidate: 3600000 },
-      });
-      if (!res.ok) throw new Error("Failed to fetch");
-      const jsonData = await res.json();
-      setData(jsonData.stocks);
-      const results = await calculate(jsonData.stocks);
-      setResults(results?.result ?? []);
-      setPortfolio(results?.bestPortfolio ?? bestPortfolio);
+      const results = await yahooFinance.search(searchQuery); // ✅ Correct function call
+      setSearchResults(results.quotes ?? []);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
-      );
+      setError(err instanceof Error ? err.message : "Search failed");
     } finally {
       setIsLoading(false);
     }
   };
 
-  
-  
   return (
     <div className={styles.container}>
-      <div className={styles.upperBox}></div>
-      <div className={styles.lowerBox}>
-        
+      <div className={styles.step1Box}>
+        <div className={styles.selectBox}>
+          <div className={styles.searchWrapper}>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search stock..."
+            />
+            <button onClick={handleSearch} disabled={isLoading}>
+              {isLoading ? "Searching..." : "Search"}
+            </button>
+          </div>
+          {error && <p style={{ color: "red" }}>{error}</p>}
+          <ul>
+            {searchResults.map((stock) => (
+              <li key={stock.symbol}>
+                {stock.shortname} ({stock.symbol})
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className={styles.setupBox}></div>
       </div>
-
+      <div className={styles.step2Box}></div>
+      <div className={styles.resultBox}></div>
     </div>
   );
 }
-      {/* <h1>Modern Portfolio Optimizer</h1>
+
+{
+  /* <h1>Modern Portfolio Optimizer</h1>
       <button
         onClick={handleFetch}
         disabled={isLoading}
@@ -121,5 +133,5 @@ export default function Portfolio() {
           <p><strong>Sharpe Ratio:</strong> {bestPortfolio.fitness.toFixed(4)}</p>
         </div>
       </div>
-    )} */}
-
+    )} */
+}
