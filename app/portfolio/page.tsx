@@ -11,19 +11,52 @@ export default function Portfolio() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     setIsLoading(true);
     setError(null);
+
     try {
-      const results = await yahooFinance.search(searchQuery); // ✅ Correct function call
-      setSearchResults(results.quotes ?? []);
+      const response = await fetch(
+        `/api/search?query=${encodeURIComponent(searchQuery)}`
+      );
+      if (!response.ok) {
+        throw new Error("Search request failed");
+      }
+      const data = await response.json();
+      setSearchResults(data.quotes || []);
+      console.log("Search results:", data.quotes);
     } catch (err) {
+      console.error("Search error:", err);
       setError(err instanceof Error ? err.message : "Search failed");
     } finally {
       setIsLoading(false);
     }
+  };
+  const [selectedStocks, setSelectedStocks] = useState<
+    Array<{
+      symbol: string;
+      shortname: string;
+      exchange: string;
+    }>
+  >([]);
+
+  const handleStockSelect = (stock: any) => {
+    setSelectedStocks((prev) => {
+      const exists = prev.some((s) => s.symbol === stock.symbol);
+      if (exists) {
+        return prev.filter((s) => s.symbol !== stock.symbol);
+      } else {
+        return [
+          ...prev,
+          {
+            symbol: stock.symbol,
+            shortname: stock.shortname,
+            exchange: stock.exchange,
+          },
+        ];
+      }
+    });
   };
 
   return (
@@ -42,15 +75,54 @@ export default function Portfolio() {
             </button>
           </div>
           {error && <p style={{ color: "red" }}>{error}</p>}
-          <ul>
-            {searchResults.map((stock) => (
-              <li key={stock.symbol}>
-                {stock.shortname} ({stock.symbol})
-              </li>
-            ))}
+          <ul className={styles.stockList}>
+            {searchResults
+              .filter((stock) => stock.quoteType === "EQUITY")
+              .map((stock) => (
+                <li
+                  key={`${stock.symbol}-${stock.exchange}`}
+                  onClick={() => handleStockSelect(stock)}
+                  className={`${styles.stockItem} ${
+                    selectedStocks.some((s) => s.symbol === stock.symbol)
+                      ? styles.selected
+                      : ""
+                  }`}
+                >
+                  {stock.shortname} ({stock.symbol})
+                </li>
+              ))}
           </ul>
         </div>
-        <div className={styles.setupBox}></div>
+        <div className={styles.setupBox}>
+          <input type="date" />
+          <input type="date" />
+          <label>Choose a car:</label>
+
+          <select name="cars" id="cars">
+            <option value="volvo">Volvo</option>
+            <option value="saab">Saab</option>
+            <option value="mercedes">Mercedes</option>
+            <option value="audi">Audi</option>
+          </select>
+          <h3>Selected Stocks</h3>
+          {selectedStocks.length > 0 ? (
+            <ul className={styles.selectedStockList}>
+              {selectedStocks.map((stock) => (
+                <li key={stock.symbol} className={styles.selectedStockItem}>
+                  <span>{stock.shortname}</span>
+                  <button
+                    onClick={() => handleStockSelect(stock)}
+                    className={styles.removeButton}
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className={styles.emptyMessage}>No stocks selected</p>
+          )}
+        </div>
       </div>
       <div className={styles.step2Box}></div>
       <div className={styles.resultBox}></div>
