@@ -24,37 +24,66 @@
 .searchWrapper {
   width: 100%;
   display: flex;
-  gap: 20px;
+  gap: 10px;
 }
 .searchWrapper input {
   flex: 1;
   height: 40px;
-  background-color: var(--white);
+  background-color: var(--neutral-300);
+  color: var(--white);
   border: none;
   border-radius: 5px;
+  font-family: "Jura", sans-serif; /* Updated font-family */
+  font-size: 1.2rem;
+  padding-left: 10px;
+
 }
-.searchWrapper button {
-  border: none;
-  border-radius: 5px;
-  height: 40px;
-  width: 80px;
+
+.searchWrapper input:focus {
+  outline: none;
+}
+::placeholder {
+  color: var(--white);
 }
 .selectBox ul {
   list-style: none;
   padding: 0;
   margin: 0;
   flex: 1;
-  border: 1px solid black;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 30px;
+  font-size: 1.5rem;
 }
 .setupBox {
   background: var(--neutral-200);
   width: 70%;
   height: 100%;
+  padding: 20px;
 }
-
+.setupBox ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  font-size: 1.5rem;
+}
+.setupBox li {
+  display: flex;
+  justify-content: space-between;
+}
+.setupBox li button {
+  border: none;
+  border-radius: 5px;
+  height: 40px;
+  padding: 5px ;
+  background-color: red;
+  color: var(--white);
+  font-size: 1.2rem;
+}
 .step2Box {
   border: 1px solid #ccc;
   width: 100%;
@@ -63,4 +92,58 @@
   font-size: 2rem;
   margin-bottom: 20px;
   color: #333;
+}
+
+
+
+
+
+.popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popupContent {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+}
+
+.popupContent h3 {
+  margin-top: 0;
+  color: #d32f2f;
+}
+
+.popupContent ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.popupContent li {
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.popupContent button {
+  margin-top: 15px;
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.popupContent button:hover {
+  background-color: #0056b3;
 }

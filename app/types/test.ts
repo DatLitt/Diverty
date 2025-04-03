@@ -8,6 +8,13 @@ export interface Stock {
   shortName?: string;
 }
 
+export interface StockDetails {
+  symbol: string;
+      shortname: string;
+      exchange: string;
+      quoteType: string;
+}
+
 export interface Portfolio {
   weights: number[];
   meanReturn: number;

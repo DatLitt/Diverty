@@ -1,7 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Jura:wght@300;400;500;600;700&display=swap');
+
 :root {
   --white: #f2f2f2;
   --black: #000b10;
   --neutral-200: #a8bbc2;
+  --neutral-300: #648694;
   --blue-2: #1019c1;
 }
 
@@ -15,7 +18,7 @@ body {
 body {
   color: var(--black);
   background: var(--white);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Jura', sans-serif;  /* Updated font-family */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   padding-top: 100px;
@@ -52,4 +55,14 @@ html {
   justify-content: center;
   color: var(--blue-2);
   border-bottom: 1px solid var(--neutral-200);
+}
+
+.primaryButton{
+  border: none;
+  border-radius: 5px;
+  height: 40px;
+  padding: 5px 20px;
+  background-color: var(--blue-2);
+  color: var(--white);
+  font-size: 1.2rem;
 }

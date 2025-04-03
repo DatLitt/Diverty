@@ -9,10 +9,19 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^7.0.1",
+    "@mui/material": "^7.0.1",
+    "@mui/x-date-pickers": "^7.28.3",
+    "apexcharts": "^4.5.0",
+    "dayjs": "^1.11.13",
     "mathjs": "^14.3.1",
     "next": "15.2.4",
     "react": "^19.0.0",
+    "react-apexcharts": "^1.7.0",
     "react-dom": "^19.0.0",
+    "react-google-charts": "^5.2.1",
     "yahoo-finance2": "^2.13.3"
   },
   "devDependencies": {
