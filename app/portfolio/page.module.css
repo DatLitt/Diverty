@@ -42,7 +42,7 @@
 .searchWrapper input:focus {
   outline: none;
 }
-::placeholder {
+.searchWrapper input::placeholder {
   color: var(--white);
 }
 .selectBox ul {
