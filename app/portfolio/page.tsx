@@ -202,8 +202,8 @@ export default function Portfolio() {
       return null;
     }
 
-    const minWeights = [0, 0, 0, 0, 0, 0, 0];
-    const maxWeights = [1, 1, 1, 1, 1, 1, 1];
+    const minWeights = [0, 0, 0, 0, 0, 0, 0.1];
+    const maxWeights = [1, 1, 0.5, 1, 1, 1, 1];
 
     const bestPortfolio = geneticOptimization(
       meanRets,
@@ -212,9 +212,9 @@ export default function Portfolio() {
       100,
       0.1,
       0.05,
-      "riskConstrained"
-      // minWeights,
-      // maxWeights
+      "riskConstrained",
+      minWeights,
+      maxWeights
     );
 
     if (!bestPortfolio) {
@@ -240,10 +240,11 @@ export default function Portfolio() {
 
   // Add this function in your Portfolio component
   const renderTreeMap = () => {
-    if (!result || result.length === 0) return null;
+    if (!result || !bestPortfolio || result.length === 0) return null;
 
     const series = [
       {
+        name: "Weight(%)",
         data: result.map((item) => ({
           x: item.ticker,
           y: +(item.weight * 100).toFixed(2),
@@ -258,6 +259,29 @@ export default function Portfolio() {
       chart: {
         height: 400,
         type: "treemap" as const,
+        toolbar: {
+          show: true,
+          tools: {
+            download: true,
+            selection: false,
+            zoom: false,
+            zoomin: false,
+            zoomout: false,
+            pan: false,
+            reset: false,
+          },
+          export: {
+            csv: {
+              filename: "portfolio_allocation",
+              columnDelimiter: ",",
+              headerCategory: `Portfolio Statistics\nExpected Return:,${(
+                bestPortfolio.meanReturn * 100
+              ).toFixed(2)}%\nRisk (Std Dev):,${(
+                bestPortfolio.stdDev * 100
+              ).toFixed(2)}%\n\nStock`,
+            },
+          },
+        },
       },
       title: {
         text: "Portfolio Allocation",
