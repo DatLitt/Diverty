@@ -592,10 +592,8 @@ export default function Portfolio() {
                     )
                   }
                 >
-                  <MenuItem value="riskConstrained">Risk Constraint</MenuItem>
-                  <MenuItem value="returnConstrained">
-                    Return Constraint
-                  </MenuItem>
+                  <MenuItem value="riskConstrained">Risk Allowed</MenuItem>
+                  <MenuItem value="returnConstrained">Desired Interst</MenuItem>
                 </Select>
               </FormControl>
               <input
