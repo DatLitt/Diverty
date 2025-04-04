@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useData } from "../context/DataContext";
 import styles from "./page.module.css";
 import { Stock, StockDetails } from "../types/test";
@@ -16,6 +16,7 @@ import { Delete } from "@mui/icons-material";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function Portfolio() {
+  const [test123, setTest123] = useState(0);
   const { data, bestPortfolio, result, setData, setResults, setPortfolio } =
     useData();
   const [searchQuery, setSearchQuery] = useState("Apple");
@@ -240,6 +241,7 @@ export default function Portfolio() {
 
   // Add this function in your Portfolio component
   const renderTreeMap = () => {
+    const div = document.getElementById("myDiv") || undefined;
     if (!result || !bestPortfolio || result.length === 0) return null;
 
     const series = [
@@ -254,21 +256,20 @@ export default function Portfolio() {
 
     const options: ApexCharts.ApexOptions = {
       legend: {
-        show: false,
+        show: true,
       },
       chart: {
-        height: 400,
         type: "treemap" as const,
         toolbar: {
           show: true,
           tools: {
             download: true,
-            selection: false,
-            zoom: false,
-            zoomin: false,
-            zoomout: false,
-            pan: false,
-            reset: false,
+            selection: true,
+            zoom: true,
+            zoomin: true,
+            zoomout: true,
+            pan: true,
+            reset: true,
           },
           export: {
             csv: {
@@ -314,14 +315,36 @@ export default function Portfolio() {
     };
 
     return (
-      <Chart options={options} series={series} type="treemap" height={400} />
+      <Chart
+        options={options}
+        series={series}
+        type="treemap"
+        width={div?.offsetWidth}
+      />
     );
   };
+
+  const handleResize = () => {
+    setTest123(test123 + 1); // Call the function to recalculate on resize
+    console.log("Resized", test123);
+  };
+
+  useEffect(() => {
+    // Check if window is defined (we're in the browser)
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", handleResize);
+
+      // Cleanup function to remove event listener
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
+    }
+  }, [test123]);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <div className={styles.container}>
-        <div className={styles.step1Box}>
+        <div className={styles.step1Box} id="myDiv">
           <div className={styles.selectBox}>
             <div className={styles.searchWrapper}>
               <input
@@ -452,78 +475,113 @@ export default function Portfolio() {
                 </div>
               </div>
             )}
-            <DatePicker
-              label="Start Date"
-              value={dayjs(startDate)}
-              onChange={(date) =>
-                date && setStartDate(date.format("YYYY-MM-DD"))
-              }
-            />
-            <DatePicker
-              label="End Date"
-              value={dayjs(endDate)}
-              onChange={(date) => date && setEndDate(date.format("YYYY-MM-DD"))}
-            />
-            <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
-              <InputLabel id="demo-simple-select-label">Interval</InputLabel>
-              <Select
-                value={interval}
-                label="Interval"
-                onChange={(e) => setInterval(e.target.value)}
-              >
-                <MenuItem value="1wk">Weekly</MenuItem>
-                <MenuItem value="1mo">Monthly</MenuItem>
-              </Select>
-            </FormControl>
-
-            <button
-              onClick={() => {
-                setSelectedStocks([]);
-              }}
-            >
-              Delete all
-            </button>
-            <h3>Selected Stocks</h3>
-            {selectedStocks.length > 0 ? (
-              <ul className={styles.selectedStockList}>
-                {selectedStocks.map((stock) => (
-                  <li
-                    key={`${stock.symbol}-${stock.quoteType}`}
-                    className={styles.selectedStockItem}
+            <div className={styles.setupHeader}>
+              <div className={styles.setupTitle}>
+                <DatePicker
+                  label="Start Date"
+                  value={dayjs(startDate)}
+                  onChange={(date) =>
+                    date && setStartDate(date.format("YYYY-MM-DD"))
+                  }
+                />
+                <DatePicker
+                  label="End Date"
+                  value={dayjs(endDate)}
+                  onChange={(date) =>
+                    date && setEndDate(date.format("YYYY-MM-DD"))
+                  }
+                />
+                <FormControl
+                  sx={{ minWidth: 120, minHeight: "max-content" }}
+                  size="small"
+                >
+                  <InputLabel id="demo-simple-select-label">
+                    Interval
+                  </InputLabel>
+                  <Select
+                    value={interval}
+                    label="Interval"
+                    onChange={(e) => setInterval(e.target.value)}
                   >
-                    <span>{stock.shortname}</span>
-                    <button
-                      onClick={() => handleStockSelect(stock)}
-                      className={styles.removeButton}
+                    <MenuItem value="1wk">Weekly</MenuItem>
+                    <MenuItem value="1mo">Monthly</MenuItem>
+                  </Select>
+                </FormControl>
+              </div>
+              <button
+                className="dangerButton"
+                onClick={() => {
+                  setSelectedStocks([]);
+                }}
+              >
+                Delete all
+              </button>
+            </div>
+            <div className={styles.selectedStocks}>
+              <h3>Selected Stocks</h3>
+              {selectedStocks.length > 0 ? (
+                <ul className={styles.stockList}>
+                  {selectedStocks.map((stock) => (
+                    <li
+                      key={`${stock.symbol}-${stock.quoteType}`}
+                      className={styles.stockItem}
                     >
-                      <Delete />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className={styles.emptyMessage}>No stocks selected</p>
-            )}
+                      <span>{stock.shortname}</span>
+                      <button
+                        onClick={() => handleStockSelect(stock)}
+                        className="dangerButton"
+                      >
+                        <Delete />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className={styles.emptyMessage}>No stocks selected</p>
+              )}
+            </div>
             <button
               className="primaryButton"
               onClick={async () => {
                 handleStocksData(selectedStocks.map((s) => s.symbol));
+                setPortfolio({
+                  meanReturn: 0,
+                  stdDev: 0,
+                  weights: [],
+                  fitness: 0,
+                }); // Reset portfolio when fetching new data
               }}
             >
               Confirm
             </button>
           </div>
         </div>
-        <div className={styles.step2Box}>
-          <button onClick={() => handleCalculate()}>Calculate</button>
-          <button>Heatmap</button>
-        </div>
-        <div className={styles.resultBox}>
-          {" "}
-          {result && result.length > 0 && (
-            <div className={styles.treeMapContainer}>{renderTreeMap()}</div>
-          )}
-        </div>
+
+        {data && data.length > 0 && (
+          <div className={styles.step2Box}>
+            <ul className={styles.stockList}>
+              {data.map(
+                (stock: Stock) =>
+                  stock.ticker && (
+                    <li key={stock.ticker}>
+                      {stock.shortName} ({stock.ticker})
+                    </li>
+                  )
+              )}
+            </ul>
+            <button className="primaryButton" onClick={() => handleCalculate()}>
+              Calculate
+            </button>
+          </div>
+        )}
+        {bestPortfolio?.weights?.length > 0 && (
+          <div className={styles.resultBox}>
+            <p className={styles.test123}>{test123}</p>
+            {result && result.length > 0 && (
+              <div className={styles.treeMapContainer}>{renderTreeMap()}</div>
+            )}
+          </div>
+        )}
       </div>
     </LocalizationProvider>
   );

@@ -6,6 +6,7 @@
   --neutral-200: #a8bbc2;
   --neutral-300: #648694;
   --blue-2: #1019c1;
+  --danger: red;
 }
 
 html,
@@ -63,6 +64,16 @@ html {
   height: 40px;
   padding: 5px 20px;
   background-color: var(--blue-2);
+  color: var(--white);
+  font-size: 1.2rem;
+}
+
+.dangerButton{
+  border: none;
+  border-radius: 5px;
+  height: 40px;
+  padding: 5px 20px;
+  background-color: var(--danger);
   color: var(--white);
   font-size: 1.2rem;
 }
