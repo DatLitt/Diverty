@@ -16,6 +16,14 @@ import { Delete } from "@mui/icons-material";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function Portfolio() {
+  // Add near other state declarations at the top of the component
+  // Add near other state declarations at the top
+  const [optimizationType, setOptimizationType] = useState<
+    "riskConstrained" | "minRisk" | "returnConstrained"
+  >("riskConstrained");
+  const [constraintValue, setConstraintValue] = useState(0.1);
+  const [minWeights, setMinWeights] = useState<number[]>([]);
+  const [maxWeights, setMaxWeights] = useState<number[]>([]);
   const [test123, setTest123] = useState(0);
   const { data, bestPortfolio, result, setData, setResults, setPortfolio } =
     useData();
@@ -203,8 +211,15 @@ export default function Portfolio() {
       return null;
     }
 
-    const minWeights = [0, 0, 0, 0, 0, 0, 0.1];
-    const maxWeights = [1, 1, 0.5, 1, 1, 1, 1];
+    const minWeightsToUse =
+      minWeights.length === data.length
+        ? minWeights
+        : new Array(data.length).fill(0);
+
+    const maxWeightsToUse =
+      maxWeights.length === data.length
+        ? maxWeights
+        : new Array(data.length).fill(1);
 
     const bestPortfolio = geneticOptimization(
       meanRets,
@@ -212,10 +227,10 @@ export default function Portfolio() {
       500,
       100,
       0.1,
-      0.05,
-      "riskConstrained",
-      minWeights,
-      maxWeights
+      constraintValue, // Using the input constraint value
+      optimizationType, // Using selected optimization type
+      minWeightsToUse,
+      maxWeightsToUse
     );
 
     if (!bestPortfolio) {
@@ -559,12 +574,78 @@ export default function Portfolio() {
 
         {data && data.length > 0 && (
           <div className={styles.step2Box}>
+            <div className={styles.step2Header}>
+              <FormControl
+                sx={{ minWidth: 120, minHeight: "max-content" }}
+                size="small"
+              >
+                <InputLabel>Optimization Type</InputLabel>
+                <Select
+                  value={optimizationType}
+                  label="Optimization Type"
+                  onChange={(e) =>
+                    setOptimizationType(
+                      e.target.value as
+                        | "riskConstrained"
+                        | "minRisk"
+                        | "returnConstrained"
+                    )
+                  }
+                >
+                  <MenuItem value="riskConstrained">Risk Constraint</MenuItem>
+                  <MenuItem value="returnConstrained">
+                    Return Constraint
+                  </MenuItem>
+                </Select>
+              </FormControl>
+              <input
+                type="number"
+                min="0"
+                max="1"
+                step="0.1"
+                value={constraintValue}
+                onChange={(e) => setConstraintValue(Number(e.target.value))}
+                placeholder={
+                  optimizationType === "riskConstrained"
+                    ? "Max Risk"
+                    : "Min Return"
+                }
+              />
+            </div>
             <ul className={styles.stockList}>
               {data.map(
-                (stock: Stock) =>
+                (stock: Stock, index: number) =>
                   stock.ticker && (
-                    <li key={stock.ticker}>
+                    <li key={stock.ticker} className={styles.stockItem}>
                       {stock.shortName} ({stock.ticker})
+                      <div>
+                        <input
+                          type="number"
+                          min="0"
+                          max="1"
+                          step="0.1"
+                          placeholder="Minimum Weight"
+                          value={minWeights[index] || 0}
+                          onChange={(e) => {
+                            const newMinWeights = [...minWeights];
+                            newMinWeights[index] = Number(e.target.value);
+                            setMinWeights(newMinWeights);
+                          }}
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          max="1"
+                          step="0.1"
+                          placeholder="Maximum Weight"
+                          value={maxWeights[index] || 1}
+                          onChange={(e) => {
+                            const newMaxWeights = [...maxWeights];
+                            newMaxWeights[index] = Number(e.target.value);
+                            setMaxWeights(newMaxWeights);
+                          }}
+                        />
+                      </div>
                     </li>
                   )
               )}
@@ -578,7 +659,15 @@ export default function Portfolio() {
           <div className={styles.resultBox}>
             <p className={styles.test123}>{test123}</p>
             {result && result.length > 0 && (
-              <div className={styles.treeMapContainer}>{renderTreeMap()}</div>
+              <div>
+                <div style={{ fontSize: "2rem" }}>
+                  <p>
+                    Interst Rate: {(bestPortfolio.meanReturn * 100).toFixed(2)}%
+                  </p>
+                  <p>Risk: {(bestPortfolio.stdDev * 100).toFixed(2)}%</p>
+                </div>
+                <div className={styles.treeMapContainer}>{renderTreeMap()}</div>
+              </div>
             )}
           </div>
         )}

@@ -122,7 +122,12 @@
   align-items: center;
   justify-content: space-between;
 }
-
+.step2Header {
+  width: 100%;
+  height: fit-content;
+  display: flex;
+  gap: 20px;
+}
 .title {
   font-size: 2rem;
   margin-bottom: 20px;
