@@ -19,7 +19,7 @@ export default function Portfolio() {
   // Add near other state declarations at the top of the component
   // Add near other state declarations at the top
   const [optimizationType, setOptimizationType] = useState<
-    "riskConstrained" | "minRisk" | "returnConstrained"
+    "riskConstrained" | "minRisk" | "returnConstrained" | "noRiskLimit"
   >("riskConstrained");
   const [constraintValue, setConstraintValue] = useState(0.1);
   const [minWeights, setMinWeights] = useState<number[]>([]);
@@ -166,6 +166,9 @@ export default function Portfolio() {
         insufficientStockDetails.length === 0
       ) {
         setData(validData);
+        // Initialize weight arrays with default values when new data is loaded
+        setMinWeights(new Array(validData.length).fill(0));
+        setMaxWeights(new Array(validData.length).fill(1));
       }
       console.log("Stock data:", validData);
     } catch (err) {
@@ -213,13 +216,17 @@ export default function Portfolio() {
 
     const minWeightsToUse =
       minWeights.length === data.length
-        ? minWeights
+        ? minWeights.map((w) => (w === null || w === undefined ? 0 : w))
         : new Array(data.length).fill(0);
 
     const maxWeightsToUse =
       maxWeights.length === data.length
-        ? maxWeights
+        ? maxWeights.map((w) => (w === null || w === undefined ? 1 : w))
         : new Array(data.length).fill(1);
+
+    console.log("minWeightsToUse:", minWeightsToUse);
+    console.log("maxWeightsToUse:", maxWeightsToUse);
+    console.log("constraintValue:", constraintValue);
 
     const bestPortfolio = geneticOptimization(
       meanRets,
@@ -565,6 +572,9 @@ export default function Portfolio() {
                   weights: [],
                   fitness: 0,
                 }); // Reset portfolio when fetching new data
+                setMinWeights([]);
+                setMaxWeights([]); // Reset weights when fetching new data
+                setResults([]); // Reset results when fetching new data
               }}
             >
               Confirm
@@ -589,11 +599,14 @@ export default function Portfolio() {
                         | "riskConstrained"
                         | "minRisk"
                         | "returnConstrained"
+                        | "noRiskLimit"
                     )
                   }
                 >
                   <MenuItem value="riskConstrained">Risk Allowed</MenuItem>
                   <MenuItem value="returnConstrained">Desired Interst</MenuItem>
+                  <MenuItem value="minRisk">Minimum Risk</MenuItem>
+                  <MenuItem value="noRiskLimit">Unlimited Risk</MenuItem>
                 </Select>
               </FormControl>
               <input

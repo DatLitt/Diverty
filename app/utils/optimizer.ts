@@ -13,12 +13,19 @@ export function geneticOptimization(
   constraint = 0.02,
   strategy:
     | "minRisk"
+    | "noRiskLimit"
     | "riskConstrained"
     | "returnConstrained" = "riskConstrained",
   minWeights: number[] = [],
   maxWeights: number[] = []
 ): Portfolio {
   // Use default constraints if not provided
+  if ((sum(minWeights) >1) || (sum(maxWeights) < 1)) {
+    throw new Error("Sum of minWeights cannot exceed 1 or sum of maxWeight cannot below 1.");
+  }
+  if (strategy === "noRiskLimit") {
+    constraint = 1; // Set a very high constraint for no risk limit
+  }
   const defaultMin = 0;
   const defaultMax = 1;
   const finalMinWeights =
@@ -210,47 +217,47 @@ function enforceIndividualWeightConstraints(
   minWeights: number[],
   maxWeights: number[]
 ): number[] {
-  // First pass: Clamp weights between individual min and max
-  let adjustedWeights = weights.map((w, i) =>
-    Math.min(Math.max(w, minWeights[i]), maxWeights[i])
-  );
-
-  // Normalize to ensure sum = 1
-  const total = sum(adjustedWeights);
-  adjustedWeights = adjustedWeights.map((w) => w / total);
-
-  // Iteratively adjust weights that violate constraints after normalization
+  let adjustedWeights = [...weights];
+  const maxIterations = 1000;
   let iterations = 0;
-  const maxIterations = 100;
-
+  
   while (iterations < maxIterations) {
-    let needsAdjustment = false;
+    // Step 1: Apply individual constraints
+    adjustedWeights = adjustedWeights.map((w, i) => 
+      Math.min(Math.max(w, minWeights[i]), maxWeights[i])
+    );
 
-    // Check for violations
-    adjustedWeights = adjustedWeights.map((w, i) => {
-      if (w < minWeights[i]) {
-        needsAdjustment = true;
-        return minWeights[i];
-      }
-      if (w > maxWeights[i]) {
-        needsAdjustment = true;
-        return maxWeights[i];
-      }
-      return w;
-    });
-
-    // Redistribute excess/deficit while maintaining constraints
-    const newTotal = sum(adjustedWeights);
-    if (Math.abs(newTotal - 1) > 0.0001) {
-      const scaleFactor = 1 / newTotal;
-      adjustedWeights = adjustedWeights.map((w, i) => {
-        const scaled = w * scaleFactor;
-        return Math.min(Math.max(scaled, minWeights[i]), maxWeights[i]);
-      });
+    // Step 2: Calculate how far we are from 100%
+    const totalWeight = sum(adjustedWeights);
+    const deficit = 1 - totalWeight;
+    
+    if (Math.abs(deficit) < 0.000001) {
+      break; // Stop if we're close enough to 100%
     }
 
-    if (!needsAdjustment) break;
+    // Step 3: Distribute the deficit while respecting constraints
+    const adjustableIndices = adjustedWeights.map((w, i) => {
+      if (deficit > 0 && w < maxWeights[i]) return i;
+      if (deficit < 0 && w > minWeights[i]) return i;
+      return -1;
+    }).filter(i => i !== -1);
+
+    if (adjustableIndices.length === 0) {
+      console.warn('Cannot satisfy constraints - sum may not equal 100%');
+      break;
+    }
+
+    // Step 4: Distribute deficit equally among adjustable weights
+    const adjustment = deficit / adjustableIndices.length;
+    adjustableIndices.forEach(i => {
+      adjustedWeights[i] += adjustment;
+    });
+
     iterations++;
+  }
+
+  if (iterations === maxIterations) {
+    console.warn('Max iterations reached while trying to satisfy constraints');
   }
 
   return adjustedWeights;
