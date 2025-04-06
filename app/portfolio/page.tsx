@@ -21,6 +21,10 @@ export default function Portfolio() {
   const [optimizationType, setOptimizationType] = useState<
     "riskConstrained" | "minRisk" | "returnConstrained" | "noRiskLimit"
   >("riskConstrained");
+  const [dateError, setDateError] = useState<string | null>(null);
+  const [tempInputValues, setTempInputValues] = useState<{
+    [key: string]: string;
+  }>({});
   const [constraintValue, setConstraintValue] = useState(0.1);
   const [minWeights, setMinWeights] = useState<number[]>([]);
   const [maxWeights, setMaxWeights] = useState<number[]>([]);
@@ -28,8 +32,11 @@ export default function Portfolio() {
   const { data, bestPortfolio, result, setData, setResults, setPortfolio } =
     useData();
   const [searchQuery, setSearchQuery] = useState("Apple");
-  const [startDate, setStartDate] = useState("2021-12-15");
-  const [endDate, setEndDate] = useState("2024-12-15");
+  const [startDate, setStartDate] = useState(
+    dayjs().subtract(5, "year").format("YYYY-MM-DD")
+  );
+  const [endDate, setEndDate] = useState(dayjs().format("YYYY-MM-DD"));
+  const [weightError, setWeightError] = useState<string | null>(null);
   const [interval, setInterval] = useState("1wk");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,7 +48,128 @@ export default function Portfolio() {
   // Add this near your other state declarations
   const [undefinedStocks, setUndefinedStocks] = useState<StockDetails[]>([]);
   const [selectedStocks, setSelectedStocks] = useState<StockDetails[]>([]);
-  console.log(data);
+
+  // Add these validation functions before the return statement
+  const validateAndSetStartDate = (newDate: dayjs.Dayjs | null) => {
+    if (!newDate) return;
+
+    const formattedDate = newDate.format("YYYY-MM-DD");
+    const endDateObj = dayjs(endDate);
+
+    if (newDate.isAfter(endDateObj)) {
+      setDateError("Start date cannot be after end date");
+      setStartDate(endDate); // Reset to end date
+      return;
+    }
+
+    setDateError(null);
+    setStartDate(formattedDate);
+  };
+
+  const validateAndSetEndDate = (newDate: dayjs.Dayjs | null) => {
+    if (!newDate) return;
+
+    const today = dayjs();
+    const startDateObj = dayjs(startDate);
+
+    if (newDate.isAfter(today)) {
+      setDateError("End date cannot be in the future");
+      setEndDate(today.format("YYYY-MM-DD")); // Reset to today
+      return;
+    }
+
+    if (newDate.isBefore(startDateObj)) {
+      setDateError("End date cannot be before start date");
+      setEndDate(startDate); // Reset to start date
+      return;
+    }
+
+    setDateError(null);
+    setEndDate(newDate.format("YYYY-MM-DD"));
+  };
+
+  const validateAndSetWeights = (
+    newValue: number,
+    index: number,
+    type: "min" | "max"
+  ) => {
+    let value = newValue;
+    let message = null;
+
+    // Ensure value is between 0 and 100
+    if (value < 0) {
+      value = 0;
+      message = "Weight cannot be negative";
+    } else if (value > 100) {
+      value = 100;
+      message = "Weight cannot exceed 100%";
+    }
+
+    // Convert percentage to decimal for internal storage
+    let decimalValue = value / 100;
+
+    if (type === "min") {
+      const newMinWeights = [...minWeights];
+      const otherMinWeightsSum = newMinWeights.reduce(
+        (sum, w, i) => sum + (i === index ? 0 : w || 0),
+        0
+      );
+
+      // Calculate maximum possible value for this minimum weight
+      const maxPossibleMin = 1 - otherMinWeightsSum;
+
+      // Check if min weight would exceed max weight
+      if (decimalValue > maxWeights[index]) {
+        value = Math.floor(maxWeights[index] * 100);
+        message = "Minimum weight cannot exceed maximum weight";
+        newMinWeights[index] = maxWeights[index];
+        decimalValue = maxWeights[index];
+      }
+
+      if (decimalValue > maxPossibleMin) {
+        value = Math.floor(maxPossibleMin * 100);
+        message = `Total minimum weight must not exceed 100%`;
+        newMinWeights[index] = maxPossibleMin;
+      } else {
+        newMinWeights[index] = decimalValue;
+      }
+
+      setMinWeights(newMinWeights);
+    } else {
+      const newMaxWeights = [...maxWeights];
+      const otherMaxWeightsSum = newMaxWeights.reduce(
+        (sum, w, i) => sum + (i === index ? 0 : w || 0),
+        0
+      );
+      const minPossibleMax = 1 - otherMaxWeightsSum;
+
+      // Check if max weight would be less than min weight
+      if (decimalValue < minWeights[index]) {
+        value = Math.ceil(minWeights[index] * 100);
+        message = "Maximum weight cannot be less than minimum weight";
+        newMaxWeights[index] = minWeights[index];
+        decimalValue = minWeights[index];
+      }
+
+      if (decimalValue < minPossibleMax) {
+        value = Math.floor(minPossibleMax * 100);
+        message = `Total max weight must not below 100%`;
+        newMaxWeights[index] = minPossibleMax;
+      } else {
+        newMaxWeights[index] = decimalValue;
+      }
+
+      setMaxWeights(newMaxWeights);
+    }
+
+    setWeightError(message);
+    if (message) {
+      setTimeout(() => setWeightError(null), 3000);
+    }
+
+    return Math.round(value);
+  };
+
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     setIsLoading(true);
@@ -502,17 +630,35 @@ export default function Portfolio() {
                 <DatePicker
                   label="Start Date"
                   value={dayjs(startDate)}
-                  onChange={(date) =>
-                    date && setStartDate(date.format("YYYY-MM-DD"))
-                  }
+                  onChange={(date) => validateAndSetStartDate(date)}
+                  maxDate={dayjs(endDate)}
                 />
                 <DatePicker
                   label="End Date"
                   value={dayjs(endDate)}
-                  onChange={(date) =>
-                    date && setEndDate(date.format("YYYY-MM-DD"))
-                  }
+                  onChange={(date) => validateAndSetEndDate(date)}
+                  maxDate={dayjs()}
+                  minDate={dayjs(startDate)}
                 />
+                {dateError && (
+                  <div
+                    style={{
+                      color: "red",
+                      fontSize: "0.8rem",
+                      position: "absolute",
+                      top: "100%",
+                      left: 0,
+                      backgroundColor: "white",
+                      padding: "4px 8px",
+                      borderRadius: "4px",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                      zIndex: 1,
+                    }}
+                  >
+                    {dateError}
+                  </div>
+                )}
+
                 <FormControl
                   sx={{ minWidth: 120, minHeight: "max-content" }}
                   size="small"
@@ -572,8 +718,7 @@ export default function Portfolio() {
                   weights: [],
                   fitness: 0,
                 }); // Reset portfolio when fetching new data
-                setMinWeights([]);
-                setMaxWeights([]); // Reset weights when fetching new data
+
                 setResults([]); // Reset results when fetching new data
               }}
             >
@@ -624,6 +769,21 @@ export default function Portfolio() {
               />
             </div>
             <ul className={styles.stockList}>
+              {weightError && (
+                <div
+                  style={{
+                    color: "red",
+                    fontSize: "0.8rem",
+                    padding: "8px",
+                    marginBottom: "8px",
+                    backgroundColor: "#fff",
+                    borderRadius: "4px",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  {weightError}
+                </div>
+              )}
               {data.map(
                 (stock: Stock, index: number) =>
                   stock.ticker && (
@@ -633,27 +793,69 @@ export default function Portfolio() {
                         <input
                           type="number"
                           min="0"
-                          max="1"
-                          step="0.1"
-                          placeholder="Minimum Weight"
-                          value={minWeights[index] || 0}
+                          max="100"
+                          step="1"
+                          placeholder="Min Weight (%)"
+                          value={
+                            tempInputValues[`min-${index}`] !== undefined
+                              ? tempInputValues[`min-${index}`]
+                              : Math.round((minWeights[index] || 0) * 100)
+                          }
                           onChange={(e) => {
-                            const newMinWeights = [...minWeights];
-                            newMinWeights[index] = Number(e.target.value);
-                            setMinWeights(newMinWeights);
+                            setTempInputValues((prev) => ({
+                              ...prev,
+                              [`min-${index}`]: e.target.value,
+                            }));
+                          }}
+                          onBlur={(e) => {
+                            const adjustedValue = validateAndSetWeights(
+                              Number(e.target.value),
+                              index,
+                              "min"
+                            );
+                            setTempInputValues((prev) => ({
+                              ...prev,
+                              [`min-${index}`]: adjustedValue.toString(),
+                            }));
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.currentTarget.blur();
+                            }
                           }}
                         />
                         <input
                           type="number"
                           min="0"
-                          max="1"
-                          step="0.1"
-                          placeholder="Maximum Weight"
-                          value={maxWeights[index] || 1}
+                          max="100"
+                          step="1"
+                          placeholder="Max Weight (%)"
+                          value={
+                            tempInputValues[`max-${index}`] !== undefined
+                              ? tempInputValues[`max-${index}`]
+                              : Math.round((maxWeights[index] || 1) * 100)
+                          }
                           onChange={(e) => {
-                            const newMaxWeights = [...maxWeights];
-                            newMaxWeights[index] = Number(e.target.value);
-                            setMaxWeights(newMaxWeights);
+                            setTempInputValues((prev) => ({
+                              ...prev,
+                              [`max-${index}`]: e.target.value,
+                            }));
+                          }}
+                          onBlur={(e) => {
+                            const adjustedValue = validateAndSetWeights(
+                              Number(e.target.value),
+                              index,
+                              "max"
+                            );
+                            setTempInputValues((prev) => ({
+                              ...prev,
+                              [`max-${index}`]: adjustedValue.toString(),
+                            }));
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.currentTarget.blur();
+                            }
                           }}
                         />
                       </div>

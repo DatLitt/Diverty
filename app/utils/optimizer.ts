@@ -1,4 +1,4 @@
-import { im, sum } from "mathjs";
+import {  sum } from "mathjs";
 import { portfolioMetrics } from "./mpt";
 import { Portfolio } from "../types/test";
 
