@@ -117,7 +117,7 @@ export default function Portfolio() {
 
       // Calculate maximum possible value for this minimum weight
       const maxPossibleMin = 1 - otherMinWeightsSum;
-
+      console.log("maxPossibleMin", maxPossibleMin);
       // Check if min weight would exceed max weight
       if (decimalValue > maxWeights[index]) {
         value = Math.floor(maxWeights[index] * 100);
@@ -142,7 +142,7 @@ export default function Portfolio() {
         0
       );
       const minPossibleMax = 1 - otherMaxWeightsSum;
-
+      console.log("minPossibleMax", minPossibleMax);
       // Check if max weight would be less than min weight
       if (decimalValue < minWeights[index]) {
         value = Math.ceil(minWeights[index] * 100);
@@ -294,11 +294,17 @@ export default function Portfolio() {
         insufficientStockDetails.length === 0
       ) {
         setData(validData);
+        setData((prev) =>
+          prev.map((item, index) => ({
+            ...item,
+            shortName: selectedStocks[index]?.shortname,
+          }))
+        );
         // Initialize weight arrays with default values when new data is loaded
         setMinWeights(new Array(validData.length).fill(0));
         setMaxWeights(new Array(validData.length).fill(1));
       }
-      console.log("Stock data:", validData);
+      console.log("Stock data:", data);
     } catch (err) {
       console.error("Data error:", err);
       setError(err instanceof Error ? err.message : "Data failed");
@@ -868,7 +874,7 @@ export default function Portfolio() {
             </button>
           </div>
         )}
-        {bestPortfolio?.weights?.length > 0 && (
+        {bestPortfolio?.fitness > 0 && (
           <div className={styles.resultBox}>
             <p className={styles.test123}>{test123}</p>
             {result && result.length > 0 && (
@@ -882,6 +888,13 @@ export default function Portfolio() {
                 <div className={styles.treeMapContainer}>{renderTreeMap()}</div>
               </div>
             )}
+          </div>
+        )}
+        {bestPortfolio?.fitness < 0 && (
+          <div>
+            <p style={{ color: "red" }}>
+              No valid portfolio found with the given constraints.
+            </p>
           </div>
         )}
       </div>

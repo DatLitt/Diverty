@@ -54,9 +54,9 @@ export function geneticOptimization(
       fitness:
         strategy === "minRisk"
           ? calculateMinRiskFitness(portfolio)
-          : strategy === "riskConstrained"
-          ? calculateRiskConstrainedFitness(portfolio, constraint)
-          : calculateReturnConstrainedFitness(portfolio, constraint),
+          : strategy === "returnConstrained"
+          ? calculateReturnConstrainedFitness(portfolio, constraint)
+          : calculateRiskConstrainedFitness(portfolio, constraint),
     }));
     // Sort by fitness
     population.sort((a, b) => b.fitness - a.fitness);
