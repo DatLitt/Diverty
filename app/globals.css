@@ -1,12 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Jura:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Jura:wght@300;400;500;600;700&display=swap");
 
 :root {
-  --white: #f2f2f2;
-  --black: #000b10;
-  --neutral-200: #a8bbc2;
-  --neutral-300: #648694;
-  --blue-2: #1019c1;
   --danger: red;
+  --primary: #0b66c2;
+  --accent: #0169b9;
+  --neutral-100: #ffffff;
+  --neutral-200: #f4f2ee;
+  --text-100: #666666;
+  --text-200: #191919;
+  --border: #dfdeda;
 }
 
 html,
@@ -17,9 +19,9 @@ body {
 }
 
 body {
-  color: var(--black);
-  background: var(--white);
-  font-family: 'Jura', sans-serif;  /* Updated font-family */
+  color: var(--text-200);
+  background: var(--neutral-200);
+  font-family: "Jura", sans-serif; /* Updated font-family */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   padding-top: 100px;
@@ -50,30 +52,43 @@ html {
   left: 0;
   width: 100%;
   height: 80px;
-  background: var(--white);
+  background: var(--neutral-100);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--blue-2);
-  border-bottom: 1px solid var(--neutral-200);
+  border-bottom: 1px solid var(--border);
 }
 
-.primaryButton{
+.primaryButton {
   border: none;
   border-radius: 5px;
   height: 40px;
   padding: 5px 20px;
-  background-color: var(--blue-2);
-  color: var(--white);
+  background-color: var(--primary);
+  color: var(--neutral-100);
   font-size: 1.2rem;
 }
-
-.dangerButton{
+.primaryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #ccc; /* optional */
+  color: #666; /* optional */
+}
+.dangerButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   border: none;
   border-radius: 5px;
   height: 40px;
-  padding: 5px 20px;
+  padding: 5px;
   background-color: var(--danger);
-  color: var(--white);
+  color: var(--neutral-100);
   font-size: 1.2rem;
+}
+.deleteButton {
+  border: none;
+  background-color: transparent;
+  color: var(--text-200);
 }

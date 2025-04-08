@@ -11,7 +11,8 @@ import dayjs from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-import { Delete } from "@mui/icons-material";
+import { Clear, Delete, Search } from "@mui/icons-material";
+import { Spinner } from "../components/Spinner";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -39,7 +40,9 @@ export default function Portfolio() {
   const [weightError, setWeightError] = useState<string | null>(null);
   const [interval, setInterval] = useState("1wk");
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const [isCalculating, setIsCalculating] = useState(false);
   const [tempValidData, setTempValidData] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [insufficientDataStocks, setInsufficientDataStocks] = useState<
@@ -116,7 +119,10 @@ export default function Portfolio() {
       );
 
       // Calculate maximum possible value for this minimum weight
-      const maxPossibleMin = 1 - otherMinWeightsSum;
+      //const maxPossibleMin = 1 - otherMinWeightsSum;
+      console.log(Math.round((1 - otherMinWeightsSum) * 100));
+      const maxPossibleMin = Math.round((1 - otherMinWeightsSum) * 100) / 100;
+
       console.log("maxPossibleMin", maxPossibleMin);
       // Check if min weight would exceed max weight
       if (decimalValue > maxWeights[index]) {
@@ -141,7 +147,7 @@ export default function Portfolio() {
         (sum, w, i) => sum + (i === index ? 0 : w || 0),
         0
       );
-      const minPossibleMax = 1 - otherMaxWeightsSum;
+      const minPossibleMax = Math.round((1 - otherMaxWeightsSum) * 100) / 100;
       console.log("minPossibleMax", minPossibleMax);
       // Check if max weight would be less than min weight
       if (decimalValue < minWeights[index]) {
@@ -172,7 +178,9 @@ export default function Portfolio() {
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
-    setIsLoading(true);
+
+    setSearchResults([]); // Clear previous results
+    setIsSearching(true);
     setError(null);
 
     try {
@@ -189,12 +197,12 @@ export default function Portfolio() {
       console.error("Search error:", err);
       setError(err instanceof Error ? err.message : "Search failed");
     } finally {
-      setIsLoading(false);
+      setIsSearching(false);
     }
   };
   const handleStocksData = async (stockSymbols: string[]) => {
     console.log("Selected stocks:", stockSymbols);
-    setIsLoading(true);
+    setIsFetching(true);
     setError(null);
     setUndefinedStocks([]);
 
@@ -309,7 +317,7 @@ export default function Portfolio() {
       console.error("Data error:", err);
       setError(err instanceof Error ? err.message : "Data failed");
     } finally {
-      setIsLoading(false);
+      setIsFetching(false);
     }
   };
 
@@ -337,61 +345,71 @@ export default function Portfolio() {
   };
   ///////////////////////////////
 
-  function handleCalculate() {
-    const returns = calculateReturns(data);
-    const meanRets = meanReturns(returns);
-    const covMat = covarianceMatrix(returns);
+  const handleCalculate = async () => {
+    setIsCalculating(true); // Set isCalculating to true at the start of calculation
+    console.log(isCalculating);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    try {
+      const returns = calculateReturns(data);
+      const meanRets = meanReturns(returns);
+      const covMat = covarianceMatrix(returns);
 
-    // Validate matrix dimensions
-    if (meanRets.length !== data.length || covMat.length !== data.length) {
-      console.log("Matrix dimension mismatch");
-      return null;
-    }
+      if (meanRets.length !== data.length || covMat.length !== data.length) {
+        console.log("Matrix dimension mismatch");
+        return;
+      }
 
-    const minWeightsToUse =
-      minWeights.length === data.length
-        ? minWeights.map((w) => (w === null || w === undefined ? 0 : w))
-        : new Array(data.length).fill(0);
+      const minWeightsToUse =
+        minWeights.length === data.length
+          ? minWeights.map((w) => (w == null ? 0 : w))
+          : new Array(data.length).fill(0);
 
-    const maxWeightsToUse =
-      maxWeights.length === data.length
-        ? maxWeights.map((w) => (w === null || w === undefined ? 1 : w))
-        : new Array(data.length).fill(1);
+      const maxWeightsToUse =
+        maxWeights.length === data.length
+          ? maxWeights.map((w) => (w == null ? 1 : w))
+          : new Array(data.length).fill(1);
 
-    console.log("minWeightsToUse:", minWeightsToUse);
-    console.log("maxWeightsToUse:", maxWeightsToUse);
-    console.log("constraintValue:", constraintValue);
+      console.log("minWeightsToUse:", minWeightsToUse);
+      console.log("maxWeightsToUse:", maxWeightsToUse);
+      console.log("constraintValue:", constraintValue);
 
-    const bestPortfolio = geneticOptimization(
-      meanRets,
-      covMat,
-      500,
-      100,
-      0.1,
-      constraintValue, // Using the input constraint value
-      optimizationType, // Using selected optimization type
-      minWeightsToUse,
-      maxWeightsToUse
-    );
-
-    if (!bestPortfolio) {
-      console.log("Optimization failed");
-      return null;
-    }
-    setPortfolio(bestPortfolio);
-    const stockName = data
-      .map((obj: Stock) => obj.ticker)
-      .filter(
-        (ticker): ticker is string => ticker !== undefined && ticker !== null
+      const bestPortfolio = geneticOptimization(
+        meanRets,
+        covMat,
+        500,
+        100,
+        0.1,
+        constraintValue,
+        optimizationType,
+        minWeightsToUse,
+        maxWeightsToUse
       );
-    const result = stockName.map((ticker: string, i: number) => ({
-      ticker,
-      weight: bestPortfolio.weights[i],
-    }));
-    setResults(result);
-    console.log("Portfolio calculation result:", result);
-    console.log("Best Portfolio:", bestPortfolio);
-  }
+
+      if (!bestPortfolio) {
+        console.log("Optimization failed");
+        return;
+      }
+
+      setPortfolio(bestPortfolio);
+
+      const stockName = data
+        .map((obj: Stock) => obj.ticker)
+        .filter((ticker): ticker is string => !!ticker);
+
+      const result = stockName.map((ticker, i) => ({
+        ticker,
+        weight: bestPortfolio.weights[i],
+      }));
+
+      setResults(result);
+      console.log("Portfolio calculation result:", result);
+      console.log("Best Portfolio:", bestPortfolio);
+    } catch (error) {
+      console.error("Error in handleCalculate:", error);
+    } finally {
+      setIsCalculating(false); // ✅ Always runs
+    }
+  };
 
   /////////////////////////////////////////////
 
@@ -475,7 +493,7 @@ export default function Portfolio() {
         options={options}
         series={series}
         type="treemap"
-        width={div?.offsetWidth}
+        width={div?.offsetWidth! - 40}
       />
     );
   };
@@ -510,15 +528,16 @@ export default function Portfolio() {
                 placeholder="Search stock..."
               />
               <button
-                className="primaryButton"
+                className={styles.searchButton}
                 onClick={handleSearch}
-                disabled={isLoading}
+                disabled={isSearching}
               >
-                {isLoading ? "Searching..." : "Search"}
+                <Search />
               </button>
             </div>
             {error && <p style={{ color: "red" }}>{error}</p>}
             <ul className={styles.stockList}>
+              {isSearching && <Spinner />}
               {searchResults
                 .filter((stock) => stock.isYahooFinance === true)
                 .filter((stock) => stock.symbol !== undefined)
@@ -634,17 +653,37 @@ export default function Portfolio() {
             <div className={styles.setupHeader}>
               <div className={styles.setupTitle}>
                 <DatePicker
+                  sx={{ width: "27%" }}
                   label="Start Date"
                   value={dayjs(startDate)}
                   onChange={(date) => validateAndSetStartDate(date)}
                   maxDate={dayjs(endDate)}
+                  slotProps={{
+                    textField: {
+                      InputProps: {
+                        sx: {
+                          height: 40, // set desired height here
+                        },
+                      },
+                    },
+                  }}
                 />
                 <DatePicker
+                  sx={{ width: "27%" }}
                   label="End Date"
                   value={dayjs(endDate)}
                   onChange={(date) => validateAndSetEndDate(date)}
                   maxDate={dayjs()}
                   minDate={dayjs(startDate)}
+                  slotProps={{
+                    textField: {
+                      InputProps: {
+                        sx: {
+                          height: 40, // set desired height here
+                        },
+                      },
+                    },
+                  }}
                 />
                 {dateError && (
                   <div
@@ -666,7 +705,7 @@ export default function Portfolio() {
                 )}
 
                 <FormControl
-                  sx={{ minWidth: 120, minHeight: "max-content" }}
+                  sx={{ width: "20%", minHeight: "max-content" }}
                   size="small"
                 >
                   <InputLabel id="demo-simple-select-label">
@@ -688,7 +727,7 @@ export default function Portfolio() {
                   setSelectedStocks([]);
                 }}
               >
-                Delete all
+                <Delete />
               </button>
             </div>
             <div className={styles.selectedStocks}>
@@ -703,9 +742,9 @@ export default function Portfolio() {
                       <span>{stock.shortname}</span>
                       <button
                         onClick={() => handleStockSelect(stock)}
-                        className="dangerButton"
+                        className="deleteButton"
                       >
-                        <Delete />
+                        <Clear />
                       </button>
                     </li>
                   ))}
@@ -715,6 +754,7 @@ export default function Portfolio() {
               )}
             </div>
             <button
+              disabled={isFetching}
               className="primaryButton"
               onClick={async () => {
                 handleStocksData(selectedStocks.map((s) => s.symbol));
@@ -728,7 +768,7 @@ export default function Portfolio() {
                 setResults([]); // Reset results when fetching new data
               }}
             >
-              Confirm
+              {isFetching ? "Fetching..." : "Confirm "}
             </button>
           </div>
         </div>
@@ -869,8 +909,12 @@ export default function Portfolio() {
                   )
               )}
             </ul>
-            <button className="primaryButton" onClick={() => handleCalculate()}>
-              Calculate
+            <button
+              className="primaryButton"
+              onClick={handleCalculate}
+              disabled={isCalculating}
+            >
+              {isCalculating ? "Calculating..." : "Calculate"}
             </button>
           </div>
         )}
