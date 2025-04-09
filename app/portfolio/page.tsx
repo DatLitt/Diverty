@@ -11,7 +11,7 @@ import dayjs from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-import { Clear, Delete, Search } from "@mui/icons-material";
+import { Clear, Delete, Edit, Search } from "@mui/icons-material";
 import { Spinner } from "../components/Spinner";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -36,6 +36,9 @@ export default function Portfolio() {
   const [startDate, setStartDate] = useState(
     dayjs().subtract(5, "year").format("YYYY-MM-DD")
   );
+  const [expandedIndices, setExpandedIndices] = useState<Set<number>>(
+    new Set()
+  );
   const [endDate, setEndDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [weightError, setWeightError] = useState<string | null>(null);
   const [interval, setInterval] = useState("1wk");
@@ -52,6 +55,17 @@ export default function Portfolio() {
   const [undefinedStocks, setUndefinedStocks] = useState<StockDetails[]>([]);
   const [selectedStocks, setSelectedStocks] = useState<StockDetails[]>([]);
 
+  const toggleIndex = (index: number) => {
+    setExpandedIndices((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index); // Collapse if already open
+      } else {
+        newSet.add(index); // Expand
+      }
+      return newSet;
+    });
+  };
   // Add these validation functions before the return statement
   const validateAndSetStartDate = (newDate: dayjs.Dayjs | null) => {
     if (!newDate) return;
@@ -801,6 +815,7 @@ export default function Portfolio() {
                 </Select>
               </FormControl>
               <input
+                className={styles.numberInput}
                 type="number"
                 min="0"
                 max="1"
@@ -836,74 +851,90 @@ export default function Portfolio() {
                     <li key={stock.ticker} className={styles.stockItem}>
                       {stock.shortName} ({stock.ticker})
                       <div>
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="1"
-                          placeholder="Min Weight (%)"
-                          value={
-                            tempInputValues[`min-${index}`] !== undefined
-                              ? tempInputValues[`min-${index}`]
-                              : Math.round((minWeights[index] || 0) * 100)
-                          }
-                          onChange={(e) => {
-                            setTempInputValues((prev) => ({
-                              ...prev,
-                              [`min-${index}`]: e.target.value,
-                            }));
-                          }}
-                          onBlur={(e) => {
-                            const adjustedValue = validateAndSetWeights(
-                              Number(e.target.value),
-                              index,
-                              "min"
-                            );
-                            setTempInputValues((prev) => ({
-                              ...prev,
-                              [`min-${index}`]: adjustedValue.toString(),
-                            }));
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.currentTarget.blur();
-                            }
-                          }}
-                        />
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="1"
-                          placeholder="Max Weight (%)"
-                          value={
-                            tempInputValues[`max-${index}`] !== undefined
-                              ? tempInputValues[`max-${index}`]
-                              : Math.round((maxWeights[index] || 1) * 100)
-                          }
-                          onChange={(e) => {
-                            setTempInputValues((prev) => ({
-                              ...prev,
-                              [`max-${index}`]: e.target.value,
-                            }));
-                          }}
-                          onBlur={(e) => {
-                            const adjustedValue = validateAndSetWeights(
-                              Number(e.target.value),
-                              index,
-                              "max"
-                            );
-                            setTempInputValues((prev) => ({
-                              ...prev,
-                              [`max-${index}`]: adjustedValue.toString(),
-                            }));
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.currentTarget.blur();
-                            }
-                          }}
-                        />
+                        {expandedIndices.has(index) && (
+                          <>
+                            <label>Min:</label>
+                            <input
+                              className={styles.numberInput}
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="1"
+                              placeholder="Min Weight (%)"
+                              value={
+                                tempInputValues[`min-${index}`] !== undefined
+                                  ? tempInputValues[`min-${index}`]
+                                  : Math.round((minWeights[index] || 0) * 100)
+                              }
+                              onChange={(e) => {
+                                setTempInputValues((prev) => ({
+                                  ...prev,
+                                  [`min-${index}`]: e.target.value,
+                                }));
+                              }}
+                              onBlur={(e) => {
+                                const adjustedValue = validateAndSetWeights(
+                                  Number(e.target.value),
+                                  index,
+                                  "min"
+                                );
+                                setTempInputValues((prev) => ({
+                                  ...prev,
+                                  [`min-${index}`]: adjustedValue.toString(),
+                                }));
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.currentTarget.blur();
+                                }
+                              }}
+                            />
+                            <label>Max:</label>
+                            <input
+                              className={styles.numberInput}
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="1"
+                              placeholder="Max Weight (%)"
+                              value={
+                                tempInputValues[`max-${index}`] !== undefined
+                                  ? tempInputValues[`max-${index}`]
+                                  : Math.round((maxWeights[index] || 1) * 100)
+                              }
+                              onChange={(e) => {
+                                setTempInputValues((prev) => ({
+                                  ...prev,
+                                  [`max-${index}`]: e.target.value,
+                                }));
+                              }}
+                              onBlur={(e) => {
+                                const adjustedValue = validateAndSetWeights(
+                                  Number(e.target.value),
+                                  index,
+                                  "max"
+                                );
+                                setTempInputValues((prev) => ({
+                                  ...prev,
+                                  [`max-${index}`]: adjustedValue.toString(),
+                                }));
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.currentTarget.blur();
+                                }
+                              }}
+                            />
+                          </>
+                        )}
+
+                        <button
+                          className="editButton"
+                          type="button"
+                          onClick={() => toggleIndex(index)}
+                        >
+                          <Edit />
+                        </button>
                       </div>
                     </li>
                   )

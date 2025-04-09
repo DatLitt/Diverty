@@ -9,7 +9,7 @@
 
 .step1Box {
   width: 100%;
-  height: calc(100vh - 100px);
+  height: calc(100vh - 120px);
   display: flex;
   gap: 20px;
 }
@@ -42,6 +42,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.searchButton:hover {
+  background-color: var(--accent);
+  cursor: pointer;
+}
+.searchButton:disabled {
+  cursor: not-allowed;
+  background-color: #ccc !important; /* optional */
+  color: #666; /* optional */
 }
 .searchWrapper input {
   flex: 1;
@@ -115,10 +124,12 @@
   padding: 0;
   margin: 0;
   flex: 1;
+  padding-bottom: 10px;
   display: flex;
   flex-direction: column;
   gap: 30px;
   font-size: 1.5rem;
+  overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--text-100) transparent;
@@ -126,6 +137,7 @@
 .stockItem {
   display: flex;
   justify-content: space-between;
+  border-bottom: 1px solid var(--border);
 }
 
 .step2Box {
@@ -230,4 +242,11 @@
 
 .test123 {
   display: none;
+}
+.numberInput {
+  color: var(--text-200);
+  border: none;
+  border-bottom: 1px solid var(--border);
+
+  padding-left: 10px;
 }

@@ -3,7 +3,7 @@
 :root {
   --danger: red;
   --primary: #0b66c2;
-  --accent: #0169b9;
+  --accent: #33a5fc;
   --neutral-100: #ffffff;
   --neutral-200: #f4f2ee;
   --text-100: #666666;
@@ -27,7 +27,7 @@ body {
   padding-top: 100px;
   padding-left: 60px;
   padding-right: 60px;
-  padding-bottom: 10px;
+  padding-bottom: 20px;
 }
 
 ::-webkit-scrollbar {
@@ -69,10 +69,13 @@ html {
   color: var(--neutral-100);
   font-size: 1.2rem;
 }
+.primaryButton:hover {
+  background-color: var(--accent);
+  cursor: pointer;
+}
 .primaryButton:disabled {
-  opacity: 0.6;
   cursor: not-allowed;
-  background-color: #ccc; /* optional */
+  background-color: #ccc !important; /* optional */
   color: #666; /* optional */
 }
 .dangerButton {
@@ -87,8 +90,27 @@ html {
   color: var(--neutral-100);
   font-size: 1.2rem;
 }
+.dangerButton:hover {
+  opacity: 0.6;
+  cursor: pointer;
+}
 .deleteButton {
   border: none;
   background-color: transparent;
   color: var(--text-200);
+}
+.deleteButton:hover {
+  cursor: pointer;
+  transform: scale(1.3);
+  transition: all 0.2s ease-in-out;
+}
+.editButton {
+  border: none;
+  background-color: transparent;
+  color: var(--text-200);
+}
+.editButton:hover {
+  cursor: pointer;
+  transform: scale(1.3);
+  transition: all 0.2s ease-in-out;
 }
