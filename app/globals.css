@@ -21,7 +21,7 @@ body {
 body {
   color: var(--text-200);
   background: var(--neutral-200);
-  font-family: "Jura", sans-serif; /* Updated font-family */
+  font-family: "Jura", sans-serif !important; /* Updated font-family */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   padding-top: 100px;

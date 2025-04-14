@@ -11,8 +11,8 @@ export interface Stock {
 export interface StockDetails {
   symbol: string;
       shortname: string;
-      exchange: string;
-      quoteType: string;
+      exchange?: string;
+      quoteType?: string;
 }
 
 export interface Portfolio {

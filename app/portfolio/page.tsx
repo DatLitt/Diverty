@@ -1,24 +1,59 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useData } from "../context/DataContext";
 import styles from "./page.module.css";
 import { Stock, StockDetails } from "../types/test";
 import { geneticOptimization } from "../utils/optimizer";
-import { calculateReturns, covarianceMatrix, meanReturns } from "../utils/mpt";
+import {
+  calculateCorrelation,
+  calculateReturns,
+  covarianceMatrix,
+  meanReturns,
+} from "../utils/mpt";
 import dynamic from "next/dynamic";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import {
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  styled,
+} from "@mui/material";
 import { Clear, Delete, Edit, Search } from "@mui/icons-material";
 import { Spinner } from "../components/Spinner";
-
+import Box from "@mui/material/Box";
+import Tab from "@mui/material/Tab";
+import TabContext from "@mui/lab/TabContext";
+import TabList from "@mui/lab/TabList";
+import TabPanel from "@mui/lab/TabPanel";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
+
+const CustomTab = styled(Tab)(({ theme }) => ({
+  backgroundColor: "var(--neutral-200)",
+  textTransform: "none",
+  fontWeight: 500,
+  padding: "12px 0",
+  flex: 1,
+  fontFamily: "Jura, sans-serif",
+  borderRadius: "10px",
+  "&.Mui-disabled": {
+    cursor: "not-allowed",
+    backgroundColor: "var(--neutral-200)" /* optional */,
+  },
+  "&.Mui-selected": {
+    backgroundColor: "var(--neutral-100)",
+    color: " var(--primary)",
+    borderRadius: "10px 10px 0 0",
+  },
+}));
 
 export default function Portfolio() {
   // Add near other state declarations at the top of the component
   // Add near other state declarations at the top
+
   const [optimizationType, setOptimizationType] = useState<
     "riskConstrained" | "minRisk" | "returnConstrained" | "noRiskLimit"
   >("riskConstrained");
@@ -26,7 +61,7 @@ export default function Portfolio() {
   const [tempInputValues, setTempInputValues] = useState<{
     [key: string]: string;
   }>({});
-  const [constraintValue, setConstraintValue] = useState(0.1);
+  const [constraintValue, setConstraintValue] = useState(0.05);
   const [minWeights, setMinWeights] = useState<number[]>([]);
   const [maxWeights, setMaxWeights] = useState<number[]>([]);
   const [test123, setTest123] = useState(0);
@@ -53,7 +88,50 @@ export default function Portfolio() {
   >([]);
   // Add this near your other state declarations
   const [undefinedStocks, setUndefinedStocks] = useState<StockDetails[]>([]);
-  const [selectedStocks, setSelectedStocks] = useState<StockDetails[]>([]);
+  const [selectedStocks, setSelectedStocks] = useState<StockDetails[]>([
+    {
+      symbol: "AAPL",
+      shortname: "Apple Inc.",
+      exchange: "NMS",
+      quoteType: "EQUITY",
+    },
+    {
+      symbol: "TSLA",
+      shortname: "Tesla, Inc.",
+      exchange: "NMS",
+      quoteType: "EQUITY",
+    },
+    {
+      symbol: "MSFT",
+      shortname: "Microsoft Corporation",
+      exchange: "NMS",
+      quoteType: "EQUITY",
+    },
+    {
+      symbol: "BRK-A",
+      shortname: "Berkshire Hathaway Inc.",
+      exchange: "NYQ",
+      quoteType: "EQUITY",
+    },
+    {
+      symbol: "AMZN",
+      shortname: "Amazon.com, Inc.",
+      exchange: "NMS",
+      quoteType: "EQUITY",
+    },
+    {
+      symbol: "GOOG",
+      shortname: "Alphabet Inc.",
+      exchange: "NMS",
+      quoteType: "EQUITY",
+    },
+    {
+      symbol: "META",
+      shortname: "Meta Platforms, Inc.",
+      exchange: "NMS",
+      quoteType: "EQUITY",
+    },
+  ]);
 
   const toggleIndex = (index: number) => {
     setExpandedIndices((prev) => {
@@ -194,7 +272,10 @@ export default function Portfolio() {
     if (!searchQuery.trim()) return;
 
     setSearchResults([]); // Clear previous results
-    setIsSearching(true);
+    setTimeout(() => {
+      setIsSearching(false);
+      setShowDropdown(true);
+    }, 500);
     setError(null);
 
     try {
@@ -215,7 +296,7 @@ export default function Portfolio() {
     }
   };
   const handleStocksData = async (stockSymbols: string[]) => {
-    console.log("Selected stocks:", stockSymbols);
+    console.log(selectedStocks);
     setIsFetching(true);
     setError(null);
     setUndefinedStocks([]);
@@ -325,8 +406,11 @@ export default function Portfolio() {
         // Initialize weight arrays with default values when new data is loaded
         setMinWeights(new Array(validData.length).fill(0));
         setMaxWeights(new Array(validData.length).fill(1));
+        setValue("2"); // Go to step 2
+        const returns = calculateReturns(validData);
+        const correlationMatrix = calculateCorrelation(returns);
+        console.log("Correlation matrix:", correlationMatrix);
       }
-      console.log("Stock data:", data);
     } catch (err) {
       console.error("Data error:", err);
       setError(err instanceof Error ? err.message : "Data failed");
@@ -361,6 +445,13 @@ export default function Portfolio() {
 
   const handleCalculate = async () => {
     setIsCalculating(true); // Set isCalculating to true at the start of calculation
+    setPortfolio({
+      meanReturn: 0,
+      stdDev: 0,
+      weights: [],
+      fitness: 0,
+    });
+    setResults([]);
     console.log(isCalculating);
     await new Promise((resolve) => setTimeout(resolve, 0));
     try {
@@ -416,6 +507,9 @@ export default function Portfolio() {
       }));
 
       setResults(result);
+      if (bestPortfolio?.fitness > 0) {
+        setValue("3"); // Go to step 3
+      }
       console.log("Portfolio calculation result:", result);
       console.log("Best Portfolio:", bestPortfolio);
     } catch (error) {
@@ -508,6 +602,7 @@ export default function Portfolio() {
         series={series}
         type="treemap"
         width={div?.offsetWidth! - 40}
+        height={"100%"}
       />
     );
   };
@@ -528,443 +623,611 @@ export default function Portfolio() {
       };
     }
   }, [test123]);
+  const [value, setValue] = useState("1");
+
+  const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+    setValue(newValue);
+  };
+
+  const [showDropdown, setShowDropdown] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const handleOptionClick = (option: string) => {
+    setSearchQuery(option);
+    setShowDropdown(false);
+  };
+
+  // Detect click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <div className={styles.container}>
-        <div className={styles.step1Box} id="myDiv">
-          <div className={styles.selectBox}>
-            <div className={styles.searchWrapper}>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search stock..."
-              />
-              <button
-                className={styles.searchButton}
-                onClick={handleSearch}
-                disabled={isSearching}
-              >
-                <Search />
-              </button>
-            </div>
-            {error && <p style={{ color: "red" }}>{error}</p>}
-            <ul className={styles.stockList}>
-              {isSearching && <Spinner />}
-              {searchResults
-                .filter((stock) => stock.isYahooFinance === true)
-                .filter((stock) => stock.symbol !== undefined)
-                .reduce((unique, stock) => {
-                  const existingStock = unique.find(
-                    (s: { symbol: string; quoteType: string }) =>
-                      s.symbol === stock.symbol
-                  );
-                  if (!existingStock) {
-                    unique.push(stock);
-                  } else if (
-                    existingStock.quoteType !== "EQUITY" &&
-                    stock.quoteType === "EQUITY"
-                  ) {
-                    // Replace non-EQUITY with EQUITY version if found
-                    unique[unique.indexOf(existingStock)] = stock;
-                  }
-                  return unique;
-                }, [] as typeof searchResults)
-                .map(
-                  (stock: {
-                    symbol: string;
-                    shortname: string;
-                    quoteType: string;
-                  }) => (
-                    <li
-                      key={`${stock.symbol}-${stock.quoteType}`}
-                      onClick={() => {
-                        handleStockSelect(stock);
-                      }}
-                      className={`${styles.stockItem} ${
-                        selectedStocks.some((s) => s.symbol === stock.symbol)
-                          ? styles.selected
-                          : ""
-                      }`}
-                    >
-                      {stock.shortname} ({stock.symbol})
-                    </li>
-                  )
-                )}
-            </ul>
-          </div>
-          <div className={styles.setupBox}>
-            {insufficientDataStocks.length > 0 && (
-              <div className={styles.popup}>
-                <div className={styles.popupContent}>
-                  <h3>Warning: Incomplete Data</h3>
-                  <p>
-                    The following stocks have significantly less data points
-                    than others:
-                  </p>
-                  <ul>
-                    {insufficientDataStocks.map((stock) => (
-                      <li key={stock.symbol}>
-                        {stock.shortname} ({stock.symbol})<br />
-                        <small>Has {stock.shortname} data points</small>
-                      </li>
-                    ))}
-                  </ul>
-                  <p className={styles.warningText}>
-                    This might affect the accuracy of your portfolio
-                    calculations.
-                  </p>
-                  <div className={styles.buttonGroup}>
-                    <button
-                      onClick={() =>
-                        insufficientDataStocks.forEach((stock) => {
-                          handleStockSelect(stock);
-                          setInsufficientDataStocks([]);
-                        })
-                      }
-                    >
-                      Remove these stocks
-                    </button>
-                    <button
-                      onClick={() => {
-                        setInsufficientDataStocks([]);
-                        setData(tempValidData);
-                      }}
-                    >
-                      Keep anyway
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-            {undefinedStocks.length > 0 && (
-              <div className={styles.popup}>
-                <div className={styles.popupContent}>
-                  <h3>Warning: Missing Data</h3>
-                  <p>
-                    The following stocks have no data for the selected period:
-                  </p>
-                  <ul>
-                    {undefinedStocks.map((stock) => (
-                      <li key={stock.symbol}>{stock.shortname} </li>
-                    ))}
-                  </ul>
-                  <button
-                    onClick={() =>
-                      undefinedStocks.forEach((stock) => {
-                        handleStockSelect(stock);
-                        setUndefinedStocks([]);
-                      })
-                    }
-                  >
-                    Delete all
-                  </button>
-                  <button onClick={() => setUndefinedStocks([])}>Close</button>
-                </div>
-              </div>
-            )}
-            <div className={styles.setupHeader}>
-              <div className={styles.setupTitle}>
-                <DatePicker
-                  sx={{ width: "27%" }}
-                  label="Start Date"
-                  value={dayjs(startDate)}
-                  onChange={(date) => validateAndSetStartDate(date)}
-                  maxDate={dayjs(endDate)}
-                  slotProps={{
-                    textField: {
-                      InputProps: {
-                        sx: {
-                          height: 40, // set desired height here
-                        },
-                      },
-                    },
-                  }}
-                />
-                <DatePicker
-                  sx={{ width: "27%" }}
-                  label="End Date"
-                  value={dayjs(endDate)}
-                  onChange={(date) => validateAndSetEndDate(date)}
-                  maxDate={dayjs()}
-                  minDate={dayjs(startDate)}
-                  slotProps={{
-                    textField: {
-                      InputProps: {
-                        sx: {
-                          height: 40, // set desired height here
-                        },
-                      },
-                    },
-                  }}
-                />
-                {dateError && (
-                  <div
-                    style={{
-                      color: "red",
-                      fontSize: "0.8rem",
-                      position: "absolute",
-                      top: "100%",
-                      left: 0,
-                      backgroundColor: "white",
-                      padding: "4px 8px",
-                      borderRadius: "4px",
-                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                      zIndex: 1,
-                    }}
-                  >
-                    {dateError}
-                  </div>
-                )}
+      <div className={styles.container} id="myDiv">
+        <Box
+          sx={{
+            width: "100%",
+            typography: "body1",
+            fontFamily: "'Jura', sans-serif",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <TabContext value={value}>
+            <Box
+              sx={{
+                borderBottom: "none",
 
-                <FormControl
-                  sx={{ width: "20%", minHeight: "max-content" }}
-                  size="small"
-                >
-                  <InputLabel id="demo-simple-select-label">
-                    Interval
-                  </InputLabel>
-                  <Select
-                    value={interval}
-                    label="Interval"
-                    onChange={(e) => setInterval(e.target.value)}
-                  >
-                    <MenuItem value="1wk">Weekly</MenuItem>
-                    <MenuItem value="1mo">Monthly</MenuItem>
-                  </Select>
-                </FormControl>
-              </div>
-              <button
-                className="dangerButton"
-                onClick={() => {
-                  setSelectedStocks([]);
-                }}
-              >
-                <Delete />
-              </button>
-            </div>
-            <div className={styles.selectedStocks}>
-              <h3>Selected Stocks</h3>
-              {selectedStocks.length > 0 ? (
-                <ul className={styles.stockList}>
-                  {selectedStocks.map((stock) => (
-                    <li
-                      key={`${stock.symbol}-${stock.quoteType}`}
-                      className={styles.stockItem}
-                    >
-                      <span>{stock.shortname}</span>
-                      <button
-                        onClick={() => handleStockSelect(stock)}
-                        className="deleteButton"
-                      >
-                        <Clear />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className={styles.emptyMessage}>No stocks selected</p>
-              )}
-            </div>
-            <button
-              disabled={isFetching}
-              className="primaryButton"
-              onClick={async () => {
-                handleStocksData(selectedStocks.map((s) => s.symbol));
-                setPortfolio({
-                  meanReturn: 0,
-                  stdDev: 0,
-                  weights: [],
-                  fitness: 0,
-                }); // Reset portfolio when fetching new data
-
-                setResults([]); // Reset results when fetching new data
+                width: "100%",
               }}
             >
-              {isFetching ? "Fetching..." : "Confirm "}
-            </button>
-          </div>
-        </div>
-
-        {data && data.length > 0 && (
-          <div className={styles.step2Box}>
-            <div className={styles.step2Header}>
-              <FormControl
-                sx={{ minWidth: 120, minHeight: "max-content" }}
-                size="small"
+              <TabList
+                onChange={handleChange}
+                aria-label="lab API tabs example"
+                className={styles.tabList}
+                variant="fullWidth"
+                slotProps={{
+                  indicator: {
+                    sx: {
+                      display: "none",
+                    },
+                  },
+                }}
               >
-                <InputLabel>Optimization Type</InputLabel>
-                <Select
-                  value={optimizationType}
-                  label="Optimization Type"
-                  onChange={(e) =>
-                    setOptimizationType(
-                      e.target.value as
-                        | "riskConstrained"
-                        | "minRisk"
-                        | "returnConstrained"
-                        | "noRiskLimit"
-                    )
+                <CustomTab label="Selection" value="1" />
+                <CustomTab
+                  label="Configuation"
+                  value="2"
+                  disabled={data?.length === 0}
+                />
+                <CustomTab
+                  label="Results"
+                  value="3"
+                  disabled={
+                    !bestPortfolio?.fitness || bestPortfolio?.fitness < 0
                   }
-                >
-                  <MenuItem value="riskConstrained">Risk Allowed</MenuItem>
-                  <MenuItem value="returnConstrained">Desired Interst</MenuItem>
-                  <MenuItem value="minRisk">Minimum Risk</MenuItem>
-                  <MenuItem value="noRiskLimit">Unlimited Risk</MenuItem>
-                </Select>
-              </FormControl>
-              <input
-                className={styles.numberInput}
-                type="number"
-                min="0"
-                max="1"
-                step="0.1"
-                value={constraintValue}
-                onChange={(e) => setConstraintValue(Number(e.target.value))}
-                placeholder={
-                  optimizationType === "riskConstrained"
-                    ? "Max Risk"
-                    : "Min Return"
-                }
-              />
-            </div>
-            <ul className={styles.stockList}>
-              {weightError && (
-                <div
-                  style={{
-                    color: "red",
-                    fontSize: "0.8rem",
-                    padding: "8px",
-                    marginBottom: "8px",
-                    backgroundColor: "#fff",
-                    borderRadius: "4px",
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  {weightError}
-                </div>
-              )}
-              {data.map(
-                (stock: Stock, index: number) =>
-                  stock.ticker && (
-                    <li key={stock.ticker} className={styles.stockItem}>
-                      {stock.shortName} ({stock.ticker})
-                      <div>
-                        {expandedIndices.has(index) && (
-                          <>
-                            <label>Min:</label>
-                            <input
-                              className={styles.numberInput}
-                              type="number"
-                              min="0"
-                              max="100"
-                              step="1"
-                              placeholder="Min Weight (%)"
-                              value={
-                                tempInputValues[`min-${index}`] !== undefined
-                                  ? tempInputValues[`min-${index}`]
-                                  : Math.round((minWeights[index] || 0) * 100)
-                              }
-                              onChange={(e) => {
-                                setTempInputValues((prev) => ({
-                                  ...prev,
-                                  [`min-${index}`]: e.target.value,
-                                }));
+                />
+              </TabList>
+            </Box>
+            <div className={styles.tabContent}>
+              <TabPanel value="1" sx={{ padding: 0, height: "100%" }}>
+                {" "}
+                <div className={styles.step1Box}>
+                  {/* <div className={styles.selectBox}>
+                    
+                    {error && <p style={{ color: "red" }}>{error}</p>}
+                    <ul className={styles.stockList}>
+                      {isSearching && <Spinner />}
+                      {searchResults
+                        .filter((stock) => stock.isYahooFinance === true)
+                        .filter((stock) => stock.symbol !== undefined)
+                        .reduce((unique, stock) => {
+                          const existingStock = unique.find(
+                            (s: { symbol: string; quoteType: string }) =>
+                              s.symbol === stock.symbol
+                          );
+                          if (!existingStock) {
+                            unique.push(stock);
+                          } else if (
+                            existingStock.quoteType !== "EQUITY" &&
+                            stock.quoteType === "EQUITY"
+                          ) {
+                            // Replace non-EQUITY with EQUITY version if found
+                            unique[unique.indexOf(existingStock)] = stock;
+                          }
+                          return unique;
+                        }, [] as typeof searchResults)
+                        .map(
+                          (stock: {
+                            symbol: string;
+                            shortname: string;
+                            quoteType: string;
+                          }) => (
+                            <li
+                              key={`${stock.symbol}-${stock.quoteType}`}
+                              onClick={() => {
+                                handleStockSelect(stock);
                               }}
-                              onBlur={(e) => {
-                                const adjustedValue = validateAndSetWeights(
-                                  Number(e.target.value),
-                                  index,
-                                  "min"
-                                );
-                                setTempInputValues((prev) => ({
-                                  ...prev,
-                                  [`min-${index}`]: adjustedValue.toString(),
-                                }));
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  e.currentTarget.blur();
-                                }
-                              }}
-                            />
-                            <label>Max:</label>
-                            <input
-                              className={styles.numberInput}
-                              type="number"
-                              min="0"
-                              max="100"
-                              step="1"
-                              placeholder="Max Weight (%)"
-                              value={
-                                tempInputValues[`max-${index}`] !== undefined
-                                  ? tempInputValues[`max-${index}`]
-                                  : Math.round((maxWeights[index] || 1) * 100)
-                              }
-                              onChange={(e) => {
-                                setTempInputValues((prev) => ({
-                                  ...prev,
-                                  [`max-${index}`]: e.target.value,
-                                }));
-                              }}
-                              onBlur={(e) => {
-                                const adjustedValue = validateAndSetWeights(
-                                  Number(e.target.value),
-                                  index,
-                                  "max"
-                                );
-                                setTempInputValues((prev) => ({
-                                  ...prev,
-                                  [`max-${index}`]: adjustedValue.toString(),
-                                }));
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  e.currentTarget.blur();
-                                }
-                              }}
-                            />
-                          </>
+                              className={`${styles.stockItem} ${
+                                selectedStocks.some(
+                                  (s) => s.symbol === stock.symbol
+                                )
+                                  ? styles.selected
+                                  : ""
+                              }`}
+                            >
+                              {stock.shortname} ({stock.symbol})
+                            </li>
+                          )
+                        )}
+                    </ul>
+                  </div> */}
+                  <div className={styles.setupBox}>
+                    <div className={styles.setupHeader}>
+                      <div className={styles.setupTitle}>
+                        <DatePicker
+                          sx={{ width: "27%" }}
+                          label="Start Date"
+                          value={dayjs(startDate)}
+                          onChange={(date) => validateAndSetStartDate(date)}
+                          maxDate={dayjs(endDate)}
+                          slotProps={{
+                            textField: {
+                              InputProps: {
+                                sx: {
+                                  height: 40, // set desired height here
+                                },
+                              },
+                            },
+                          }}
+                        />
+                        <DatePicker
+                          sx={{ width: "27%" }}
+                          label="End Date"
+                          value={dayjs(endDate)}
+                          onChange={(date) => validateAndSetEndDate(date)}
+                          maxDate={dayjs()}
+                          minDate={dayjs(startDate)}
+                          slotProps={{
+                            textField: {
+                              InputProps: {
+                                sx: {
+                                  height: 40, // set desired height here
+                                },
+                              },
+                            },
+                          }}
+                        />
+                        {dateError && (
+                          <div
+                            style={{
+                              color: "red",
+                              fontSize: "0.8rem",
+                              position: "absolute",
+                              top: "100%",
+                              left: 0,
+                              backgroundColor: "white",
+                              padding: "4px 8px",
+                              borderRadius: "4px",
+                              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                              zIndex: 1,
+                            }}
+                          >
+                            {dateError}
+                          </div>
                         )}
 
-                        <button
-                          className="editButton"
-                          type="button"
-                          onClick={() => toggleIndex(index)}
+                        <FormControl
+                          sx={{ width: "20%", minHeight: "max-content" }}
+                          size="small"
                         >
-                          <Edit />
+                          <InputLabel id="demo-simple-select-label">
+                            Interval
+                          </InputLabel>
+                          <Select
+                            value={interval}
+                            label="Interval"
+                            onChange={(e) => setInterval(e.target.value)}
+                          >
+                            <MenuItem value="1wk">Weekly</MenuItem>
+                            <MenuItem value="1mo">Monthly</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </div>
+                      <div className={styles.searchWrapper} ref={wrapperRef}>
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          ref={inputRef}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Search stock..."
+                        />
+                        <button
+                          className={styles.searchButton}
+                          onClick={handleSearch}
+                          disabled={isSearching}
+                        >
+                          <Search />
+                        </button>
+                        {showDropdown && searchResults.length > 0 && (
+                          <ul
+                            className={[styles.stockList, styles.dropdown].join(
+                              " "
+                            )}
+                          >
+                            {isSearching && <Spinner />}
+                            {searchResults
+                              .filter((stock) => stock.isYahooFinance === true)
+                              .filter((stock) => stock.symbol !== undefined)
+                              .reduce((unique, stock) => {
+                                const existingStock = unique.find(
+                                  (s: { symbol: string; quoteType: string }) =>
+                                    s.symbol === stock.symbol
+                                );
+                                if (!existingStock) {
+                                  unique.push(stock);
+                                } else if (
+                                  existingStock.quoteType !== "EQUITY" &&
+                                  stock.quoteType === "EQUITY"
+                                ) {
+                                  // Replace non-EQUITY with EQUITY version if found
+                                  unique[unique.indexOf(existingStock)] = stock;
+                                }
+                                return unique;
+                              }, [] as typeof searchResults)
+                              .map(
+                                (stock: {
+                                  symbol: string;
+                                  shortname: string;
+                                  quoteType: string;
+                                }) => (
+                                  <li
+                                    key={`${stock.symbol}-${stock.quoteType}`}
+                                    onClick={() => {
+                                      handleStockSelect(stock);
+                                    }}
+                                    className={`${styles.stockItem} ${
+                                      selectedStocks.some(
+                                        (s) => s.symbol === stock.symbol
+                                      )
+                                        ? styles.selected
+                                        : ""
+                                    }`}
+                                  >
+                                    {stock.shortname} ({stock.symbol})
+                                  </li>
+                                )
+                              )}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                    {insufficientDataStocks.length > 0 && (
+                      <div className={styles.popup}>
+                        <div className={styles.popupContent}>
+                          <h3>Warning: Incomplete Data</h3>
+                          <p>
+                            The following stocks have significantly less data
+                            points than others:
+                          </p>
+                          <ul>
+                            {insufficientDataStocks.map((stock) => (
+                              <li key={stock.symbol}>
+                                {stock.shortname} ({stock.symbol})<br />
+                                <small>Has {stock.shortname} data points</small>
+                              </li>
+                            ))}
+                          </ul>
+                          <p className={styles.warningText}>
+                            This might affect the accuracy of your portfolio
+                            calculations.
+                          </p>
+                          <div className={styles.buttonGroup}>
+                            <button
+                              onClick={() =>
+                                insufficientDataStocks.forEach((stock) => {
+                                  handleStockSelect(stock);
+                                  setInsufficientDataStocks([]);
+                                })
+                              }
+                            >
+                              Remove these stocks
+                            </button>
+                            <button
+                              onClick={() => {
+                                setInsufficientDataStocks([]);
+                                setData(tempValidData);
+                                setValue("2"); // Go to step 2
+                              }}
+                            >
+                              Keep anyway
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {undefinedStocks.length > 0 && (
+                      <div className={styles.popup}>
+                        <div className={styles.popupContent}>
+                          <h3>Warning: Missing Data</h3>
+                          <p>
+                            The following stocks have no data for the selected
+                            period:
+                          </p>
+                          <ul>
+                            {undefinedStocks.map((stock) => (
+                              <li key={stock.symbol}>{stock.shortname} </li>
+                            ))}
+                          </ul>
+                          <button
+                            onClick={() =>
+                              undefinedStocks.forEach((stock) => {
+                                handleStockSelect(stock);
+                                setUndefinedStocks([]);
+                              })
+                            }
+                          >
+                            Delete all
+                          </button>
+                          <button onClick={() => setUndefinedStocks([])}>
+                            Close
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    <div className={styles.selectedStocks}>
+                      <div className={styles.selectedStocksHeader}>
+                        <h3>Selected Stocks</h3>
+                        <button
+                          className="dangerButton"
+                          onClick={() => {
+                            setSelectedStocks([]);
+                          }}
+                        >
+                          <Delete />
                         </button>
                       </div>
-                    </li>
-                  )
-              )}
-            </ul>
-            <button
-              className="primaryButton"
-              onClick={handleCalculate}
-              disabled={isCalculating}
-            >
-              {isCalculating ? "Calculating..." : "Calculate"}
-            </button>
-          </div>
-        )}
-        {bestPortfolio?.fitness > 0 && (
-          <div className={styles.resultBox}>
-            <p className={styles.test123}>{test123}</p>
-            {result && result.length > 0 && (
-              <div>
-                <div style={{ fontSize: "2rem" }}>
-                  <p>
-                    Interst Rate: {(bestPortfolio.meanReturn * 100).toFixed(2)}%
-                  </p>
-                  <p>Risk: {(bestPortfolio.stdDev * 100).toFixed(2)}%</p>
+                      {selectedStocks.length > 0 ? (
+                        <ul className={styles.stockList}>
+                          {selectedStocks.map((stock) => (
+                            <li
+                              key={`${stock.symbol}-${stock.quoteType}`}
+                              className={styles.stockItem}
+                            >
+                              <span>{stock.shortname}</span>
+                              <button
+                                onClick={() => handleStockSelect(stock)}
+                                className="deleteButton"
+                              >
+                                <Clear />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className={styles.emptyMessage}>
+                          No stocks selected
+                        </p>
+                      )}
+                    </div>
+
+                    <button
+                      disabled={isFetching || selectedStocks.length === 0}
+                      className="primaryButton"
+                      onClick={async () => {
+                        await handleStocksData(
+                          selectedStocks.map((s) => s.symbol)
+                        );
+                        setPortfolio({
+                          meanReturn: 0,
+                          stdDev: 0,
+                          weights: [],
+                          fitness: 0,
+                        });
+                        setResults([]);
+                      }}
+                    >
+                      {isFetching ? "Fetching..." : "Confirm"}
+                    </button>
+                  </div>
                 </div>
-                <div className={styles.treeMapContainer}>{renderTreeMap()}</div>
-              </div>
-            )}
-          </div>
-        )}
+              </TabPanel>
+              <TabPanel value="2" sx={{ padding: 0 }}>
+                <div className={styles.step2Box}>
+                  <div className={styles.step2Header}>
+                    <FormControl
+                      sx={{ minWidth: 120, minHeight: "max-content" }}
+                      size="small"
+                    >
+                      <InputLabel>Optimization Type</InputLabel>
+                      <Select
+                        value={optimizationType}
+                        label="Optimization Type"
+                        onChange={(e) =>
+                          setOptimizationType(
+                            e.target.value as
+                              | "riskConstrained"
+                              | "minRisk"
+                              | "returnConstrained"
+                              | "noRiskLimit"
+                          )
+                        }
+                      >
+                        <MenuItem value="riskConstrained">
+                          Risk Allowed
+                        </MenuItem>
+                        <MenuItem value="returnConstrained">
+                          Desired Interst
+                        </MenuItem>
+                        <MenuItem value="minRisk">Minimum Risk</MenuItem>
+                        <MenuItem value="noRiskLimit">Unlimited Risk</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <input
+                      className={styles.numberInput}
+                      type="number"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={constraintValue}
+                      onChange={(e) =>
+                        setConstraintValue(Number(e.target.value))
+                      }
+                      placeholder={
+                        optimizationType === "riskConstrained"
+                          ? "Max Risk"
+                          : "Min Return"
+                      }
+                    />
+                  </div>
+                  <ul className={styles.stockList}>
+                    {weightError && (
+                      <div
+                        style={{
+                          color: "red",
+                          fontSize: "0.8rem",
+                          padding: "8px",
+                          marginBottom: "8px",
+                          backgroundColor: "#fff",
+                          borderRadius: "4px",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                        }}
+                      >
+                        {weightError}
+                      </div>
+                    )}
+                    {data.map(
+                      (stock: Stock, index: number) =>
+                        stock.ticker && (
+                          <li key={stock.ticker} className={styles.stockItem}>
+                            {stock.shortName} ({stock.ticker})
+                            <div>
+                              {expandedIndices.has(index) && (
+                                <>
+                                  <label>Min:</label>
+                                  <input
+                                    className={styles.numberInput}
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    step="1"
+                                    placeholder="Min Weight (%)"
+                                    value={
+                                      tempInputValues[`min-${index}`] !==
+                                      undefined
+                                        ? tempInputValues[`min-${index}`]
+                                        : Math.round(
+                                            (minWeights[index] || 0) * 100
+                                          )
+                                    }
+                                    onChange={(e) => {
+                                      setTempInputValues((prev) => ({
+                                        ...prev,
+                                        [`min-${index}`]: e.target.value,
+                                      }));
+                                    }}
+                                    onBlur={(e) => {
+                                      const adjustedValue =
+                                        validateAndSetWeights(
+                                          Number(e.target.value),
+                                          index,
+                                          "min"
+                                        );
+                                      setTempInputValues((prev) => ({
+                                        ...prev,
+                                        [`min-${index}`]:
+                                          adjustedValue.toString(),
+                                      }));
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        e.currentTarget.blur();
+                                      }
+                                    }}
+                                  />
+                                  <label>Max:</label>
+                                  <input
+                                    className={styles.numberInput}
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    step="1"
+                                    placeholder="Max Weight (%)"
+                                    value={
+                                      tempInputValues[`max-${index}`] !==
+                                      undefined
+                                        ? tempInputValues[`max-${index}`]
+                                        : Math.round(
+                                            (maxWeights[index] || 1) * 100
+                                          )
+                                    }
+                                    onChange={(e) => {
+                                      setTempInputValues((prev) => ({
+                                        ...prev,
+                                        [`max-${index}`]: e.target.value,
+                                      }));
+                                    }}
+                                    onBlur={(e) => {
+                                      const adjustedValue =
+                                        validateAndSetWeights(
+                                          Number(e.target.value),
+                                          index,
+                                          "max"
+                                        );
+                                      setTempInputValues((prev) => ({
+                                        ...prev,
+                                        [`max-${index}`]:
+                                          adjustedValue.toString(),
+                                      }));
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        e.currentTarget.blur();
+                                      }
+                                    }}
+                                  />
+                                </>
+                              )}
+
+                              <button
+                                className="editButton"
+                                type="button"
+                                onClick={() => toggleIndex(index)}
+                              >
+                                <Edit />
+                              </button>
+                            </div>
+                          </li>
+                        )
+                    )}
+                  </ul>
+                  <button
+                    className="primaryButton"
+                    onClick={() => {
+                      handleCalculate();
+                    }}
+                    disabled={isCalculating}
+                  >
+                    {isCalculating ? "Calculating..." : "Calculate"}
+                  </button>
+                </div>
+              </TabPanel>
+              <TabPanel value="3" sx={{ padding: 0, height: "100%" }}>
+                <div className={styles.resultBox}>
+                  <p className={styles.test123}>{test123}</p>
+                  {result && result.length > 0 && (
+                    <>
+                      <div style={{ fontSize: "2rem" }}>
+                        <p>
+                          Interst Rate:{" "}
+                          {(bestPortfolio.meanReturn * 100).toFixed(2)}%
+                        </p>
+                        <p>Risk: {(bestPortfolio.stdDev * 100).toFixed(2)}%</p>
+                      </div>
+                      <div className={styles.treeMapContainer}>
+                        {renderTreeMap()}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </TabPanel>
+            </div>
+          </TabContext>
+        </Box>
+
         {bestPortfolio?.fitness < 0 && (
           <div>
             <p style={{ color: "red" }}>

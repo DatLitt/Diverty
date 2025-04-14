@@ -1,15 +1,36 @@
 .container {
   width: 100%;
+  height: calc(100vh - 120px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 20px;
+  font-family: "Jura", sans-serif !important; /* Updated font-family */
+}
+.tabContent {
+  width: 100%;
+  flex: 1;
+  border: none;
+  border-left: 2px solid var(--border);
+  border-right: 2px solid var(--border);
+  border-bottom: 2px solid var(--border);
+  border-radius: 0 0 5px 5px;
+  overflow: hidden;
+}
+.tabList {
+  border: none;
+  border-left: 2px solid var(--border);
+  border-right: 2px solid var(--border);
+  border-top: 2px solid var(--border);
+  border-radius: 5px 5px 0 0;
+  overflow: hidden;
+  background-color: var(--neutral-200);
 }
 
 .step1Box {
   width: 100%;
-  height: calc(100vh - 120px);
+  height: 100%;
   display: flex;
   gap: 20px;
 }
@@ -22,15 +43,12 @@
   flex-direction: column;
   gap: 20px;
   border-radius: 5px;
-  border: 2px solid var(--border);
 }
 .searchWrapper {
-  width: 100%;
-  max-width: 100%;
-
+  flex: 1;
+  position: relative;
   display: flex;
   border-radius: 5px;
-  overflow: hidden;
 }
 .searchButton {
   width: 40px;
@@ -71,6 +89,21 @@
 .searchWrapper input::placeholder {
   color: var(--text-100);
 }
+.dropdown {
+  position: absolute;
+  top: 100%; /* Directly below the input */
+  left: 0;
+  width: 100%;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  z-index: 999;
+  margin-top: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  list-style: none;
+  padding: 0;
+}
 .selectBox ul {
   list-style: none;
   padding: 0;
@@ -82,10 +115,8 @@
   font-size: 1.5rem;
 }
 .setupBox {
-  border-radius: 5px;
-  border: 2px solid var(--border);
   background: var(--neutral-100);
-  width: 70%;
+  width: 100%;
   height: 100%;
   padding: 20px;
   display: flex;
@@ -104,6 +135,14 @@
   flex: 1;
   display: flex;
   gap: 20px;
+  justify-content: flex-start;
+}
+.selectedStocksHeader {
+  width: 100%;
+  height: fit-content;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 .MuiInputBase-root {
   height: 40px !important;
@@ -141,9 +180,6 @@
 }
 
 .step2Box {
-  border-radius: 5px;
-  border: 2px solid var(--border);
-
   width: 100%;
   min-height: 40vh;
   max-height: 100vh;
@@ -168,12 +204,10 @@
 }
 
 .resultBox {
-  border-radius: 5px;
-  border: 2px solid var(--border);
   padding: 20px;
   background-color: var(--neutral-100);
   width: 100%;
-  height: fit-content;
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -183,11 +217,10 @@
 
 .treeMapContainer {
   width: 100%;
-  height: 100%;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid black;
 }
 
 .popup {
