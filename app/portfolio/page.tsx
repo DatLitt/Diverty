@@ -13,6 +13,7 @@ import Step2 from "../components/Step2";
 import Step3 from "../components/Step3";
 import { useData } from "../context/DataContext";
 import styles from "./page.module.css";
+import { StockDetails } from "../types/test";
 
 const CustomTab = styled(Tab)(() => ({
   backgroundColor: "var(--neutral-200)",
@@ -34,6 +35,50 @@ const CustomTab = styled(Tab)(() => ({
 }));
 
 export default function Portfolio() {
+  const [selectedStocks, setSelectedStocks] = useState<StockDetails[]>([
+      {
+        symbol: "AAPL",
+        shortname: "Apple Inc.",
+        exchange: "NMS",
+        quoteType: "EQUITY",
+      },
+      {
+        symbol: "TSLA",
+        shortname: "Tesla, Inc.",
+        exchange: "NMS",
+        quoteType: "EQUITY",
+      },
+      {
+        symbol: "MSFT",
+        shortname: "Microsoft Corporation",
+        exchange: "NMS",
+        quoteType: "EQUITY",
+      },
+      {
+        symbol: "BRK-A",
+        shortname: "Berkshire Hathaway Inc.",
+        exchange: "NYQ",
+        quoteType: "EQUITY",
+      },
+      {
+        symbol: "AMZN",
+        shortname: "Amazon.com, Inc.",
+        exchange: "NMS",
+        quoteType: "EQUITY",
+      },
+      {
+        symbol: "GOOG",
+        shortname: "Alphabet Inc.",
+        exchange: "NMS",
+        quoteType: "EQUITY",
+      },
+      {
+        symbol: "META",
+        shortname: "Meta Platforms, Inc.",
+        exchange: "NMS",
+        quoteType: "EQUITY",
+      },
+    ]);
   const [minWeights, setMinWeights] = useState<number[]>([]);
   const [maxWeights, setMaxWeights] = useState<number[]>([]);
 
@@ -81,7 +126,7 @@ export default function Portfolio() {
               >
                 <CustomTab label="Selection" value="1" />
                 <CustomTab
-                  label="Configuation"
+                  label="Configuration"
                   value="2"
                   disabled={data?.length === 0}
                 />
@@ -100,9 +145,11 @@ export default function Portfolio() {
                   setValue={setValue}
                   setMinWeights={setMinWeights}
                   setMaxWeights={setMaxWeights}
+                  selectedStocks={selectedStocks}
+                  setSelectedStocks={setSelectedStocks}
                 />
               </TabPanel>
-              <TabPanel value="2" sx={{ padding: 0 }}>
+              <TabPanel value="2" sx={{ padding: 0, height: "100%" }}>
                 <Step2
                   setMinWeights={setMinWeights}
                   setMaxWeights={setMaxWeights}

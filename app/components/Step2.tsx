@@ -3,10 +3,16 @@ import { Edit } from "@mui/icons-material";
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { Stock } from "../types/test";
 import styles from "../portfolio/page.module.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useData } from "../context/DataContext";
-import { calculateReturns, meanReturns, covarianceMatrix } from "../utils/mpt";
+import {
+  calculateReturns,
+  meanReturns,
+  covarianceMatrix,
+  calculateCorrelation,
+} from "../utils/mpt";
 import { geneticOptimization } from "../utils/optimizer";
+import dynamic from "next/dynamic";
 
 export default function Step2({
   setMaxWeights,
@@ -21,11 +27,13 @@ export default function Step2({
   minWeights: number[];
   maxWeights: number[];
 }) {
+  const [test123, setTest123] = useState(0);
+  const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
   const [isCalculating, setIsCalculating] = useState(false);
   const [optimizationType, setOptimizationType] = useState<
     "riskConstrained" | "minRisk" | "returnConstrained" | "noRiskLimit"
   >("riskConstrained");
-  const [constraintValue, setConstraintValue] = useState(0.05);
+  const [constraintValue, setConstraintValue] = useState(5);
   const [weightError, setWeightError] = useState<string | null>(null);
   const [expandedIndices, setExpandedIndices] = useState<Set<number>>(
     new Set()
@@ -33,6 +41,7 @@ export default function Step2({
   const [tempInputValues, setTempInputValues] = useState<{
     [key: string]: string;
   }>({});
+  const [showHeatmap, setShowHeatmap] = useState(false);
 
   const { data, bestPortfolio, result, setData, setResults, setPortfolio } =
     useData();
@@ -135,6 +144,70 @@ export default function Step2({
     return Math.round(value);
   };
 
+  const handleHeatmap = () => {
+    const returns = calculateReturns(data);
+    const labels = data.map(stock => stock.ticker);
+    const correlationMatrix =  calculateCorrelation(returns);
+    console.log(labels);
+    const series = correlationMatrix.map((row, rowIndex) => ({
+      name: labels[rowIndex],
+      data: row.map((value, colIndex) => ({
+        x: labels[colIndex],
+        y: parseFloat(value.toFixed(4)), // optional: limit decimals
+      })),
+    }));
+    const div = document.getElementById("myDiv") || undefined;
+    const options = {
+      chart: {
+        type: 'heatmap',
+        height: 350
+      },
+      dataLabels: {
+        enabled: false
+      },
+      title: {
+        text: 'Stock Correlation Matrix'
+      },
+      xaxis: {
+        type: 'category'
+      },
+      colors: ["#008FFB"],
+      colorScale: {
+        ranges: [
+          { from: 0, to: 0.3, color: '#FF4560', name: 'Low' },
+          { from: 0.3, to: 0.7, color: '#FEB019', name: 'Medium' },
+          { from: 0.7, to: 1, color: '#00E396', name: 'High' }
+        ]
+      }
+    } as  ApexCharts.ApexOptions;
+      return (  <Chart
+        options={options}
+        series={series}
+        type="heatmap"
+        width={div?.offsetWidth! - 40}
+        height={"100%"}
+      />)
+  };
+
+
+  
+    const handleResize = () => {
+      setTest123(test123 + 1); // Call the function to recalculate on resize
+      console.log("Resized", test123);
+    };
+  
+    useEffect(() => {
+      // Check if window is defined (we're in the browser)
+      if (typeof window !== "undefined") {
+        window.addEventListener("resize", handleResize);
+  
+        // Cleanup function to remove event listener
+        return () => {
+          window.removeEventListener("resize", handleResize);
+        };
+      }
+    }, [test123]);
+
   ///////////////////////////////
 
   const handleCalculate = async () => {
@@ -178,7 +251,7 @@ export default function Step2({
         500,
         100,
         0.1,
-        constraintValue,
+        constraintValue / 100,
         optimizationType,
         minWeightsToUse,
         maxWeightsToUse
@@ -215,164 +288,211 @@ export default function Step2({
 
   return (
     <div className={styles.step2Box}>
-      <div className={styles.step2Header}>
-        <FormControl
-          sx={{ minWidth: 120, minHeight: "max-content" }}
-          size="small"
-        >
-          <InputLabel>Optimization Type</InputLabel>
-          <Select
-            value={optimizationType}
-            label="Optimization Type"
-            onChange={(e) =>
-              setOptimizationType(
-                e.target.value as
-                  | "riskConstrained"
-                  | "minRisk"
-                  | "returnConstrained"
-                  | "noRiskLimit"
-              )
-            }
-          >
-            <MenuItem value="riskConstrained">Risk Allowed</MenuItem>
-            <MenuItem value="returnConstrained">Desired Interst</MenuItem>
-            <MenuItem value="minRisk">Minimum Risk</MenuItem>
-            <MenuItem value="noRiskLimit">Unlimited Risk</MenuItem>
-          </Select>
-        </FormControl>
-        <input
-          className={styles.numberInput}
-          type="number"
-          min="0"
-          max="1"
-          step="0.1"
-          value={constraintValue}
-          onChange={(e) => setConstraintValue(Number(e.target.value))}
-          placeholder={
-            optimizationType === "riskConstrained" ? "Max Risk" : "Min Return"
-          }
-        />
-      </div>
-      <ul className={styles.stockList}>
-        {weightError && (
-          <div
-            style={{
-              color: "red",
-              fontSize: "0.8rem",
-              padding: "8px",
-              marginBottom: "8px",
-              backgroundColor: "#fff",
-              borderRadius: "4px",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
-          >
-            {weightError}
-          </div>
-        )}
-        {data.map(
-          (stock: Stock, index: number) =>
-            stock.ticker && (
-              <li key={stock.ticker} className={styles.stockItem}>
-                {stock.shortName} ({stock.ticker})
-                <div>
-                  {expandedIndices.has(index) && (
-                    <>
-                      <label>Min:</label>
-                      <input
-                        className={styles.numberInput}
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="1"
-                        placeholder="Min Weight (%)"
-                        value={
-                          tempInputValues[`min-${index}`] !== undefined
-                            ? tempInputValues[`min-${index}`]
-                            : Math.round((minWeights[index] || 0) * 100)
-                        }
-                        onChange={(e) => {
-                          setTempInputValues((prev) => ({
-                            ...prev,
-                            [`min-${index}`]: e.target.value,
-                          }));
-                        }}
-                        onBlur={(e) => {
-                          const adjustedValue = validateAndSetWeights(
-                            Number(e.target.value),
-                            index,
-                            "min"
-                          );
-                          setTempInputValues((prev) => ({
-                            ...prev,
-                            [`min-${index}`]: adjustedValue.toString(),
-                          }));
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.currentTarget.blur();
-                          }
-                        }}
-                      />
-                      <label>Max:</label>
-                      <input
-                        className={styles.numberInput}
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="1"
-                        placeholder="Max Weight (%)"
-                        value={
-                          tempInputValues[`max-${index}`] !== undefined
-                            ? tempInputValues[`max-${index}`]
-                            : Math.round((maxWeights[index] || 1) * 100)
-                        }
-                        onChange={(e) => {
-                          setTempInputValues((prev) => ({
-                            ...prev,
-                            [`max-${index}`]: e.target.value,
-                          }));
-                        }}
-                        onBlur={(e) => {
-                          const adjustedValue = validateAndSetWeights(
-                            Number(e.target.value),
-                            index,
-                            "max"
-                          );
-                          setTempInputValues((prev) => ({
-                            ...prev,
-                            [`max-${index}`]: adjustedValue.toString(),
-                          }));
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.currentTarget.blur();
-                          }
-                        }}
-                      />
-                    </>
-                  )}
+      {!showHeatmap && (
+        <div className={styles.setupBox}>
+          <div className={styles.step2Header}>
+            <FormControl
+              sx={{ minWidth: 120, minHeight: "max-content" }}
+              size="small"
+            >
+              <InputLabel>Optimization Type</InputLabel>
+              <Select
+                value={optimizationType}
+                label="Optimization Type"
+                onChange={(e) =>
+                  setOptimizationType(
+                    e.target.value as
+                      | "riskConstrained"
+                      | "minRisk"
+                      | "returnConstrained"
+                      | "noRiskLimit"
+                  )
+                }
+              >
+                <MenuItem value="riskConstrained">
+                  Maximum Risk Allowed
+                </MenuItem>
+                <MenuItem value="returnConstrained">
+                  Minimum Return Rate
+                </MenuItem>
+                <MenuItem value="minRisk">Minimum Risk</MenuItem>
+                <MenuItem value="noRiskLimit">Maximum Return Rate</MenuItem>
+              </Select>
+            </FormControl>
 
-                  <button
-                    className="editButton"
-                    type="button"
-                    onClick={() => toggleIndex(index)}
-                  >
-                    <Edit />
-                  </button>
+            {optimizationType !== "minRisk" &&
+              optimizationType !== "noRiskLimit" && (
+                <div>
+                  <input
+                    className={styles.numberInput100}
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    value={constraintValue}
+                    onChange={(e) => setConstraintValue(Number(e.target.value))}
+                    placeholder={
+                      optimizationType === "riskConstrained"
+                        ? "Max Risk"
+                        : "Min Return"
+                    }
+                  />
+                  <span>%</span>
                 </div>
-              </li>
-            )
-        )}
-      </ul>
-      <button
-        className="primaryButton"
-        onClick={() => {
-          handleCalculate();
-        }}
-        disabled={isCalculating}
-      >
-        {isCalculating ? "Calculating..." : "Calculate"}
-      </button>
+              )}
+            <button
+              className="primaryButton"
+              onClick={() => {
+                setShowHeatmap(true);
+                handleHeatmap();
+              }}
+            >
+              Heatmap
+            </button>
+          </div>
+          <div className={styles.selectedStocks}>
+            <ul className={styles.stockList}>
+              {weightError && (
+                <div
+                  style={{
+                    color: "red",
+                    fontSize: "0.8rem",
+                    padding: "8px",
+                    marginBottom: "8px",
+                    backgroundColor: "#fff",
+                    borderRadius: "4px",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  {weightError}
+                </div>
+              )}
+              {data.map(
+                (stock: Stock, index: number) =>
+                  stock.ticker && (
+                    <li key={stock.ticker} className={styles.stockItem}>
+                      {stock.shortName} ({stock.ticker})
+                      <div style={{ width: "fit-content", display: "flex" }}>
+                        {expandedIndices.has(index) && (
+                          <>
+                            <label>Min:</label>
+                            <div style={{ position: "relative" }}>
+                              <input
+                                className={styles.numberInput}
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="1"
+                                placeholder="Min Weight (%)"
+                                value={
+                                  tempInputValues[`min-${index}`] !== undefined
+                                    ? tempInputValues[`min-${index}`]
+                                    : Math.round((minWeights[index] || 0) * 100)
+                                }
+                                onChange={(e) => {
+                                  setTempInputValues((prev) => ({
+                                    ...prev,
+                                    [`min-${index}`]: e.target.value,
+                                  }));
+                                }}
+                                onBlur={(e) => {
+                                  const adjustedValue = validateAndSetWeights(
+                                    Number(e.target.value),
+                                    index,
+                                    "min"
+                                  );
+                                  setTempInputValues((prev) => ({
+                                    ...prev,
+                                    [`min-${index}`]: adjustedValue.toString(),
+                                  }));
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.currentTarget.blur();
+                                  }
+                                }}
+                              />
+                              <span>%</span>
+                            </div>
+                            <label>Max:</label>
+                            <div style={{ position: "relative" }}>
+                              <input
+                                className={styles.numberInput}
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="1"
+                                placeholder="Max Weight (%)"
+                                value={
+                                  tempInputValues[`max-${index}`] !== undefined
+                                    ? tempInputValues[`max-${index}`]
+                                    : Math.round((maxWeights[index] || 1) * 100)
+                                }
+                                onChange={(e) => {
+                                  setTempInputValues((prev) => ({
+                                    ...prev,
+                                    [`max-${index}`]: e.target.value,
+                                  }));
+                                }}
+                                onBlur={(e) => {
+                                  const adjustedValue = validateAndSetWeights(
+                                    Number(e.target.value),
+                                    index,
+                                    "max"
+                                  );
+                                  setTempInputValues((prev) => ({
+                                    ...prev,
+                                    [`max-${index}`]: adjustedValue.toString(),
+                                  }));
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.currentTarget.blur();
+                                  }
+                                }}
+                              />
+                              <span>%</span>
+                            </div>
+                          </>
+                        )}
+
+                        <button
+                          className="editButton"
+                          type="button"
+                          onClick={() => toggleIndex(index)}
+                        >
+                          <Edit />
+                        </button>
+                      </div>
+                    </li>
+                  )
+              )}
+            </ul>
+          </div>
+          <button
+            className="primaryButton"
+            onClick={() => {
+              handleCalculate();
+            }}
+            disabled={isCalculating}
+          >
+            {isCalculating ? "Calculating..." : "Calculate"}
+          </button>
+        </div>
+      )}
+      {showHeatmap && (
+        <div className={styles.setupBox}>
+          <div className={styles.step2Header}>
+            <button
+              className="primaryButton"
+              onClick={() => setShowHeatmap(false)}
+            >
+              Back
+            </button>
+          </div>
+          <div className={styles.treeMapContainer}>{handleHeatmap()}</div>
+        </div>
+      )}
     </div>
   );
 }

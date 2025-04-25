@@ -116,7 +116,7 @@ export default function Step3() {
       {result && result.length > 0 && (
         <>
           <div style={{ fontSize: "2rem" }}>
-            <p>Interst Rate: {(bestPortfolio.meanReturn * 100).toFixed(2)}%</p>
+            <p>Return Rate: {(bestPortfolio.meanReturn * 100).toFixed(2)}%</p>
             <p>Risk: {(bestPortfolio.stdDev * 100).toFixed(2)}%</p>
           </div>
           <div className={styles.treeMapContainer}>{renderTreeMap()}</div>

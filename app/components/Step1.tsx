@@ -14,10 +14,14 @@ export default function Step1({
   setValue,
   setMaxWeights,
   setMinWeights,
+  selectedStocks,
+  setSelectedStocks
 }: {
   setValue: (value: string) => void;
   setMinWeights: (weights: number[]) => void;
   setMaxWeights: (weights: number[]) => void;
+  selectedStocks: StockDetails[];
+  setSelectedStocks: (stocks: StockDetails[] | ((prev: StockDetails[]) => StockDetails[])) => void;
 }) {
   const [startDate, setStartDate] = useState(
     dayjs().subtract(5, "year").format("YYYY-MM-DD")
@@ -32,50 +36,7 @@ export default function Step1({
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [selectedStocks, setSelectedStocks] = useState<StockDetails[]>([
-    {
-      symbol: "AAPL",
-      shortname: "Apple Inc.",
-      exchange: "NMS",
-      quoteType: "EQUITY",
-    },
-    {
-      symbol: "TSLA",
-      shortname: "Tesla, Inc.",
-      exchange: "NMS",
-      quoteType: "EQUITY",
-    },
-    {
-      symbol: "MSFT",
-      shortname: "Microsoft Corporation",
-      exchange: "NMS",
-      quoteType: "EQUITY",
-    },
-    {
-      symbol: "BRK-A",
-      shortname: "Berkshire Hathaway Inc.",
-      exchange: "NYQ",
-      quoteType: "EQUITY",
-    },
-    {
-      symbol: "AMZN",
-      shortname: "Amazon.com, Inc.",
-      exchange: "NMS",
-      quoteType: "EQUITY",
-    },
-    {
-      symbol: "GOOG",
-      shortname: "Alphabet Inc.",
-      exchange: "NMS",
-      quoteType: "EQUITY",
-    },
-    {
-      symbol: "META",
-      shortname: "Meta Platforms, Inc.",
-      exchange: "NMS",
-      quoteType: "EQUITY",
-    },
-  ]);
+  
   const [insufficientDataStocks, setInsufficientDataStocks] = useState<
     StockDetails[]
   >([]);
@@ -211,9 +172,7 @@ export default function Step1({
         setMinWeights(new Array(validData.length).fill(0));
         setMaxWeights(new Array(validData.length).fill(1));
         setValue("2"); // Go to step 2
-        const returns = calculateReturns(validData);
-        const correlationMatrix = calculateCorrelation(returns);
-        console.log("Correlation matrix:", correlationMatrix);
+        
       }
     } catch (err) {
       console.error("Data error:", err);
@@ -381,6 +340,7 @@ export default function Step1({
               >
                 <MenuItem value="1wk">Weekly</MenuItem>
                 <MenuItem value="1mo">Monthly</MenuItem>
+             
               </Select>
             </FormControl>
           </div>
