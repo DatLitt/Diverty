@@ -15,13 +15,15 @@ export default function Step1({
   setMaxWeights,
   setMinWeights,
   selectedStocks,
-  setSelectedStocks
+  setSelectedStocks,
 }: {
   setValue: (value: string) => void;
   setMinWeights: (weights: number[]) => void;
   setMaxWeights: (weights: number[]) => void;
   selectedStocks: StockDetails[];
-  setSelectedStocks: (stocks: StockDetails[] | ((prev: StockDetails[]) => StockDetails[])) => void;
+  setSelectedStocks: (
+    stocks: StockDetails[] | ((prev: StockDetails[]) => StockDetails[])
+  ) => void;
 }) {
   const [startDate, setStartDate] = useState(
     dayjs().subtract(5, "year").format("YYYY-MM-DD")
@@ -36,7 +38,7 @@ export default function Step1({
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [insufficientDataStocks, setInsufficientDataStocks] = useState<
     StockDetails[]
   >([]);
@@ -172,7 +174,6 @@ export default function Step1({
         setMinWeights(new Array(validData.length).fill(0));
         setMaxWeights(new Array(validData.length).fill(1));
         setValue("2"); // Go to step 2
-        
       }
     } catch (err) {
       console.error("Data error:", err);
@@ -248,16 +249,46 @@ export default function Step1({
     }
   };
 
-  const handleStockSelect = (stock: any) => {
-    setSelectedStocks((prev) => {
-      const exists = prev.some(
+  const handleStockSelect = async (stock: any) => {
+    let data: {
+      price?: number | null;
+      changePercent?: number | null;
+      sector?: string | null;
+      industry?: string | null;
+      website?: string | null;
+    } | null = null;
+
+    try {
+      if (!selectedStocks.some(
         (s) => s.symbol === stock.symbol && s.quoteType === stock.quoteType
-      );
-      if (exists) {
-        return prev.filter(
-          (s) => s.symbol !== stock.symbol || s.quoteType !== stock.quoteType
+      )) {
+        console.log("fetched")
+        const response = await fetch(
+          `/api/selectStock?symbol=${encodeURIComponent(stock.symbol)}`
         );
-      } else {
+        if (response.ok) {
+          data = await response.json();
+          console.log("Search results:", data);
+        } else {
+          console.warn("Search request failed with status:", response.status);
+        }
+      }
+    } catch (err) {
+      console.error("Search error:", err);
+      setError(err instanceof Error ? err.message : "Search failed");
+    } finally {
+      setIsSearching(false);
+
+      setSelectedStocks((prev) => {
+        const exists = prev.some(
+          (s) => s.symbol === stock.symbol && s.quoteType === stock.quoteType
+        );
+
+        if (exists) {
+          return prev.filter(
+            (s) => s.symbol !== stock.symbol || s.quoteType !== stock.quoteType
+          );
+        }
         return [
           ...prev,
           {
@@ -265,10 +296,15 @@ export default function Step1({
             shortname: stock.shortname,
             exchange: stock.exchange,
             quoteType: stock.quoteType,
+            price: data?.price ?? undefined,
+            changePercent: data?.changePercent ?? undefined,
+            sector: data?.sector ?? undefined,
+            industry: data?.industry ?? undefined,
+            website: data?.website ?? undefined,
           },
         ];
-      }
-    });
+      });
+    }
   };
 
   return (
@@ -340,7 +376,6 @@ export default function Step1({
               >
                 <MenuItem value="1wk">Weekly</MenuItem>
                 <MenuItem value="1mo">Monthly</MenuItem>
-             
               </Select>
             </FormControl>
           </div>
@@ -493,6 +528,20 @@ export default function Step1({
                   className={styles.stockItem}
                 >
                   <span>{stock.shortname}</span>
+                  <span>
+                    {stock.price !== undefined ? `${stock.price}` : "no price"}
+                  </span>
+                  <span>
+                    {stock.changePercent !== undefined
+                      ? `${stock.changePercent}`
+                      : "no price"}
+                  </span>
+                  <span>
+                    {stock.sector !== undefined
+                      ? `${stock.sector}`
+                      : "no price"}
+                  </span>
+
                   <button
                     onClick={() => handleStockSelect(stock)}
                     className="deleteButton"
