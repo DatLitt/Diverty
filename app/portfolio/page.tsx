@@ -36,50 +36,7 @@ const CustomTab = styled(Tab)(() => ({
 }));
 
 export default function Portfolio() {
-  const [selectedStocks, setSelectedStocks] = useState<StockDetails[]>([
-      {
-        symbol: "AAPL",
-        shortname: "Apple Inc.",
-        exchange: "NMS",
-        quoteType: "EQUITY",
-      },
-      {
-        symbol: "TSLA",
-        shortname: "Tesla, Inc.",
-        exchange: "NMS",
-        quoteType: "EQUITY",
-      },
-      {
-        symbol: "MSFT",
-        shortname: "Microsoft Corporation",
-        exchange: "NMS",
-        quoteType: "EQUITY",
-      },
-      {
-        symbol: "BRK-A",
-        shortname: "Berkshire Hathaway Inc.",
-        exchange: "NYQ",
-        quoteType: "EQUITY",
-      },
-      {
-        symbol: "AMZN",
-        shortname: "Amazon.com, Inc.",
-        exchange: "NMS",
-        quoteType: "EQUITY",
-      },
-      {
-        symbol: "GOOG",
-        shortname: "Alphabet Inc.",
-        exchange: "NMS",
-        quoteType: "EQUITY",
-      },
-      {
-        symbol: "META",
-        shortname: "Meta Platforms, Inc.",
-        exchange: "NMS",
-        quoteType: "EQUITY",
-      },
-    ]);
+  const [selectedStocks, setSelectedStocks] = useState<StockDetails[]>([]);
   const [minWeights, setMinWeights] = useState<number[]>([]);
   const [maxWeights, setMaxWeights] = useState<number[]>([]);
 

@@ -259,10 +259,12 @@ export default function Step1({
     } | null = null;
 
     try {
-      if (!selectedStocks.some(
-        (s) => s.symbol === stock.symbol && s.quoteType === stock.quoteType
-      )) {
-        console.log("fetched")
+      if (
+        !selectedStocks.some(
+          (s) => s.symbol === stock.symbol && s.quoteType === stock.quoteType
+        )
+      ) {
+        console.log("fetched");
         const response = await fetch(
           `/api/selectStock?symbol=${encodeURIComponent(stock.symbol)}`
         );
@@ -313,7 +315,13 @@ export default function Step1({
         <div className={styles.setupHeader}>
           <div className={styles.setupTitle}>
             <DatePicker
-              sx={{ width: "27%" }}
+              sx={{
+                width: {
+                  xs: "33%", // phones
+                  // sm: "50%", // tablets
+                  md: "27%", // desktops
+                },
+              }}
               label="Start Date"
               value={dayjs(startDate)}
               onChange={(date) => validateAndSetStartDate(date)}
@@ -329,7 +337,13 @@ export default function Step1({
               }}
             />
             <DatePicker
-              sx={{ width: "27%" }}
+              sx={{
+                width: {
+                  xs: "33%", // phones
+                  // sm: "50%", // tablets
+                  md: "27%", // desktops
+                },
+              }}
               label="End Date"
               value={dayjs(endDate)}
               onChange={(date) => validateAndSetEndDate(date)}
@@ -365,7 +379,13 @@ export default function Step1({
             )}
 
             <FormControl
-              sx={{ width: "20%", minHeight: "max-content" }}
+              sx={{
+                width: {
+                  xs: "33%", // phones
+                  sm: "50%", // tablets
+                  md: "20%", // desktops
+                },
+              }}
               size="small"
             >
               <InputLabel id="demo-simple-select-label">Interval</InputLabel>
@@ -509,7 +529,7 @@ export default function Step1({
           </div>
         )}
         <div className={styles.selectedStocks}>
-          <div className={styles.selectedStocksHeader}>
+          {/* <div className={styles.selectedStocksHeader}>
             <h3>Selected Stocks</h3>
             <button
               className="dangerButton"
@@ -519,38 +539,53 @@ export default function Step1({
             >
               <Delete />
             </button>
-          </div>
-          {selectedStocks.length > 0 ? (
-            <ul className={styles.stockList}>
-              {selectedStocks.map((stock) => (
-                <li
-                  key={`${stock.symbol}-${stock.quoteType}`}
-                  className={styles.stockItem}
-                >
-                  <span>{stock.shortname}</span>
-                  <span>
-                    {stock.price !== undefined ? `${stock.price}` : "no price"}
-                  </span>
-                  <span>
-                    {stock.changePercent !== undefined
-                      ? `${stock.changePercent}`
-                      : "no price"}
-                  </span>
-                  <span>
-                    {stock.sector !== undefined
-                      ? `${stock.sector}`
-                      : "no price"}
-                  </span>
+          </div> */}
 
-                  <button
-                    onClick={() => handleStockSelect(stock)}
-                    className="deleteButton"
-                  >
-                    <Clear />
-                  </button>
-                </li>
-              ))}
-            </ul>
+          {selectedStocks.length > 0 ? (
+            <table className={styles.stockTable}>
+              <thead>
+                <tr>
+                  <th>Selected Stocks</th>
+                  <th>Price</th>
+                  <th>Change Rate</th>
+                  <th>Asset</th>
+                  <th>
+                    <button
+                      className="dangerButton"
+                      onClick={() => {
+                        setSelectedStocks([]);
+                      }}
+                    >
+                      <Delete />
+                    </button>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedStocks.map((stock) => (
+                  <tr key={`${stock.symbol}-${stock.quoteType}`}>
+                    <td>{stock.shortname}</td>
+                    <td>
+                      {stock.price !== undefined ? stock.price : "no price"}
+                    </td>
+                    <td>
+                      {stock.changePercent !== undefined
+                        ? stock.changePercent
+                        : "no price"}
+                    </td>
+                    <td>{stock.sector || "no price"}</td>
+                    <td>
+                      <button
+                        onClick={() => handleStockSelect(stock)}
+                        className="deleteButton"
+                      >
+                        <Clear />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : (
             <p className={styles.emptyMessage}>No stocks selected</p>
           )}

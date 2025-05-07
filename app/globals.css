@@ -18,6 +18,8 @@ body {
   min-height: 100vh;
 }
 
+/* Phone: up to 480px wide */
+
 body {
   color: var(--text-200);
   background: var(--neutral-200);
@@ -28,6 +30,12 @@ body {
   padding-left: 60px;
   padding-right: 60px;
   padding-bottom: 20px;
+}
+@media (max-width: 480px) {
+  body {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
 }
 
 ::-webkit-scrollbar {
@@ -79,7 +87,7 @@ html {
   color: #666; /* optional */
 }
 .dangerButton {
-  display: flex;
+  /* display: flex; */
   justify-content: center;
   align-items: center;
   border: none;
