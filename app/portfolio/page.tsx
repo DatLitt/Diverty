@@ -36,9 +36,16 @@ const CustomTab = styled(Tab)(() => ({
 }));
 
 export default function Portfolio() {
+  const [optimizationType, setOptimizationType] = useState<
+    "riskConstrained" | "minRisk" | "returnConstrained" | "noRiskLimit"
+  >("riskConstrained");
+  const [constraintValue, setConstraintValue] = useState(5);
   const [selectedStocks, setSelectedStocks] = useState<StockDetails[]>([]);
   const [minWeights, setMinWeights] = useState<number[]>([]);
   const [maxWeights, setMaxWeights] = useState<number[]>([]);
+  const [expandedIndices, setExpandedIndices] = useState<Set<number>>(
+    new Set()
+  );
 
   const { data, bestPortfolio } = useData();
 
@@ -114,6 +121,12 @@ export default function Portfolio() {
                   setValue={setValue}
                   minWeights={minWeights}
                   maxWeights={maxWeights}
+                  optimizationType={optimizationType}
+                  setOptimizationType={setOptimizationType}
+                  constraintValue={constraintValue}
+                  setConstraintValue={setConstraintValue}
+                  expandedIndices={expandedIndices}
+                  setExpandedIndices={setExpandedIndices}
                 />
               </TabPanel>
               <TabPanel value="3" sx={{ padding: 0, height: "100%" }}>
