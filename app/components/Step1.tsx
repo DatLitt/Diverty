@@ -556,7 +556,7 @@ export default function Step1({
                         setSelectedStocks([]);
                       }}
                     >
-                      <Delete />
+                      Clear
                     </button>
                   </th>
                 </tr>
