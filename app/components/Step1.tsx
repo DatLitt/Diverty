@@ -382,7 +382,7 @@ export default function Step1({
               sx={{
                 width: {
                   xs: "33%", // phones
-                  sm: "50%", // tablets
+                  sm: "30%", // tablets
                   md: "20%", // desktops
                 },
               }}

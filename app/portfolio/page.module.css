@@ -338,3 +338,11 @@
     gap: 5px;
   }
 }
+@media (max-width: 768px) {
+  .setupHeader {
+    gap: 20px;
+  }
+  .setupTitle {
+    gap: 5px;
+  }
+}
