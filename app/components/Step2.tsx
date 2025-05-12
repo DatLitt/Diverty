@@ -3,7 +3,7 @@ import { Edit } from "@mui/icons-material";
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { Stock } from "../types/test";
 import styles from "../portfolio/page.module.css";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useData } from "../context/DataContext";
 import {
   calculateReturns,
@@ -21,7 +21,25 @@ export default function Step2({
   setValue,
   minWeights,
   maxWeights,
+  optimizationType,
+  setOptimizationType,
+  constraintValue,
+  setConstraintValue,
+  expandedIndices,
+  setExpandedIndices,
 }: {
+  expandedIndices: Set<number>;
+  setExpandedIndices: React.Dispatch<React.SetStateAction<Set<number>>>;
+  constraintValue: number;
+  setConstraintValue: (value: number) => void;
+  optimizationType:
+    | "riskConstrained"
+    | "minRisk"
+    | "returnConstrained"
+    | "noRiskLimit";
+  setOptimizationType: (
+    type: "riskConstrained" | "minRisk" | "returnConstrained" | "noRiskLimit"
+  ) => void;
   setMinWeights: (weights: number[]) => void;
   setMaxWeights: (weights: number[]) => void;
   setValue: (value: string) => void;
@@ -31,14 +49,9 @@ export default function Step2({
   const [test123, setTest123] = useState(0);
   const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
   const [isCalculating, setIsCalculating] = useState(false);
-  const [optimizationType, setOptimizationType] = useState<
-    "riskConstrained" | "minRisk" | "returnConstrained" | "noRiskLimit"
-  >("riskConstrained");
-  const [constraintValue, setConstraintValue] = useState(5);
+
   const [weightError, setWeightError] = useState<string | null>(null);
-  const [expandedIndices, setExpandedIndices] = useState<Set<number>>(
-    new Set()
-  );
+
   const [tempInputValues, setTempInputValues] = useState<{
     [key: string]: string;
   }>({});
