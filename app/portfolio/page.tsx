@@ -7,6 +7,7 @@ import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+
 import { useState } from "react";
 import Step1 from "../components/Step1";
 import Step2 from "../components/Step2";
@@ -35,52 +36,16 @@ const CustomTab = styled(Tab)(() => ({
 }));
 
 export default function Portfolio() {
-  const [selectedStocks, setSelectedStocks] = useState<StockDetails[]>([
-      {
-        symbol: "AAPL",
-        shortname: "Apple Inc.",
-        exchange: "NMS",
-        quoteType: "EQUITY",
-      },
-      {
-        symbol: "TSLA",
-        shortname: "Tesla, Inc.",
-        exchange: "NMS",
-        quoteType: "EQUITY",
-      },
-      {
-        symbol: "MSFT",
-        shortname: "Microsoft Corporation",
-        exchange: "NMS",
-        quoteType: "EQUITY",
-      },
-      {
-        symbol: "BRK-A",
-        shortname: "Berkshire Hathaway Inc.",
-        exchange: "NYQ",
-        quoteType: "EQUITY",
-      },
-      {
-        symbol: "AMZN",
-        shortname: "Amazon.com, Inc.",
-        exchange: "NMS",
-        quoteType: "EQUITY",
-      },
-      {
-        symbol: "GOOG",
-        shortname: "Alphabet Inc.",
-        exchange: "NMS",
-        quoteType: "EQUITY",
-      },
-      {
-        symbol: "META",
-        shortname: "Meta Platforms, Inc.",
-        exchange: "NMS",
-        quoteType: "EQUITY",
-      },
-    ]);
+  const [optimizationType, setOptimizationType] = useState<
+    "riskConstrained" | "minRisk" | "returnConstrained" | "noRiskLimit"
+  >("riskConstrained");
+  const [constraintValue, setConstraintValue] = useState(5);
+  const [selectedStocks, setSelectedStocks] = useState<StockDetails[]>([]);
   const [minWeights, setMinWeights] = useState<number[]>([]);
   const [maxWeights, setMaxWeights] = useState<number[]>([]);
+  const [expandedIndices, setExpandedIndices] = useState<Set<number>>(
+    new Set()
+  );
 
   const { data, bestPortfolio } = useData();
 
@@ -156,6 +121,12 @@ export default function Portfolio() {
                   setValue={setValue}
                   minWeights={minWeights}
                   maxWeights={maxWeights}
+                  optimizationType={optimizationType}
+                  setOptimizationType={setOptimizationType}
+                  constraintValue={constraintValue}
+                  setConstraintValue={setConstraintValue}
+                  expandedIndices={expandedIndices}
+                  setExpandedIndices={setExpandedIndices}
                 />
               </TabPanel>
               <TabPanel value="3" sx={{ padding: 0, height: "100%" }}>

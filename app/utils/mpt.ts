@@ -5,19 +5,19 @@ import { mean, transpose, multiply, sqrt } from "mathjs";
 function interpolateData(stocks: Stock[]) {
   // Find the full date range
   const allDates = new Set<string>();
-  stocks.forEach(stock => {
-    stock.data?.forEach(d => {
-      allDates.add(new Date(d.date).toISOString().split('T')[0]);
+  stocks.forEach((stock) => {
+    stock.data?.forEach((d) => {
+      allDates.add(new Date(d.date).toISOString().split("T")[0]);
     });
   });
 
   const sortedDates = Array.from(allDates).sort();
 
-  return stocks.map(stock => {
+  return stocks.map((stock) => {
     const dateMap = new Map(
-      stock.data?.map(d => [
-        new Date(d.date).toISOString().split('T')[0],
-        d.changePercent
+      stock.data?.map((d) => [
+        new Date(d.date).toISOString().split("T")[0],
+        d.changePercent,
       ]) || []
     );
 
@@ -46,14 +46,14 @@ function interpolateData(stocks: Stock[]) {
         // Linear interpolation
         const steps = nextIndex - prevIndex;
         const diff = nextValue - prevValue;
-        return prevValue + (diff / steps);
+        return prevValue + diff / steps;
       }
 
       // If no interpolation possible, use nearest value
       return prevValue ?? nextValue ?? 0;
     });
 
-    return filledData.map(value => value / 100); // Convert to decimal
+    return filledData.map((value) => value / 100); // Convert to decimal
   });
 }
 
@@ -64,7 +64,7 @@ export function calculateReturns(stocks: Stock[]) {
 
 // 2. Calculate mean returns
 export function meanReturns(returns: number[][]) {
-  return returns.map(stockReturns => mean(stockReturns));
+  return returns.map((stockReturns) => mean(stockReturns));
 }
 
 // 3. Calculate covariance matrix with interpolated data
@@ -77,9 +77,11 @@ export function covarianceMatrix(returns: number[][]) {
     for (let j = 0; j < n; j++) {
       const meanI = mean(returns[i]);
       const meanJ = mean(returns[j]);
-      const cov = returns[i]
-        .map((r, idx) => (r - meanI) * (returns[j][idx] - meanJ))
-        .reduce((sum, val) => sum + val, 0) / (returns[i].length - 1);
+      const cov =
+        returns[i]
+          .map((r, idx) => (r - meanI) * (returns[j][idx] - meanJ))
+          .reduce((sum, val) => sum + val, 0) /
+        (returns[i].length - 1);
       matrix[i][j] = cov;
     }
   }
@@ -110,23 +112,29 @@ export function calculateCorrelation(returns: number[][]) {
   for (let i = 0; i < n; i++) {
     corrMatrix[i] = [];
     const meanI = mean(returns[i]);
-    const stdDevI = Number(sqrt(
-      returns[i].reduce((sum, x) => sum + Math.pow(x - meanI, 2), 0) /
-      (returns[i].length - 1)
-    ));
+    const stdDevI = Number(
+      sqrt(
+        returns[i].reduce((sum, x) => sum + Math.pow(x - meanI, 2), 0) /
+          (returns[i].length - 1)
+      )
+    );
 
     for (let j = 0; j < n; j++) {
       const meanJ = mean(returns[j]);
-      const stdDevJ = Number(sqrt(
-        returns[j].reduce((sum, x) => sum + Math.pow(x - meanJ, 2), 0) /
-        (returns[j].length - 1)
-      ));
+      const stdDevJ = Number(
+        sqrt(
+          returns[j].reduce((sum, x) => sum + Math.pow(x - meanJ, 2), 0) /
+            (returns[j].length - 1)
+        )
+      );
 
-      const covariance = returns[i].reduce(
-        (sum, _, idx) =>
-          sum + (returns[i][idx] - meanI) * (returns[j][idx] - meanJ),
-        0
-      ) / (returns[i].length - 1);
+      const covariance =
+        returns[i].reduce(
+          (sum, _, idx) =>
+            sum + (returns[i][idx] - meanI) * (returns[j][idx] - meanJ),
+          0
+        ) /
+        (returns[i].length - 1);
 
       const denominator = stdDevI * stdDevJ;
       const correlation = denominator !== 0 ? covariance / denominator : 0;

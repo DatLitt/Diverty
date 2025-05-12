@@ -1,8 +1,6 @@
-import {  sum } from "mathjs";
+import { sum } from "mathjs";
 import { portfolioMetrics } from "./mpt";
 import { Portfolio } from "../types/test";
-
-
 
 export function geneticOptimization(
   meanReturnsArr: number[],
@@ -20,8 +18,10 @@ export function geneticOptimization(
   maxWeights: number[] = []
 ): Portfolio {
   // Use default constraints if not provided
-  if ((sum(minWeights) >1) || (sum(maxWeights) < 1)) {
-    throw new Error("Sum of minWeights cannot exceed 1 or sum of maxWeight cannot below 1.");
+  if (sum(minWeights) > 1 || sum(maxWeights) < 1) {
+    throw new Error(
+      "Sum of minWeights cannot exceed 1 or sum of maxWeight cannot below 1."
+    );
   }
   if (strategy === "noRiskLimit") {
     constraint = 1; // Set a very high constraint for no risk limit
@@ -220,36 +220,38 @@ function enforceIndividualWeightConstraints(
   let adjustedWeights = [...weights];
   const maxIterations = 1000;
   let iterations = 0;
-  
+
   while (iterations < maxIterations) {
     // Step 1: Apply individual constraints
-    adjustedWeights = adjustedWeights.map((w, i) => 
+    adjustedWeights = adjustedWeights.map((w, i) =>
       Math.min(Math.max(w, minWeights[i]), maxWeights[i])
     );
 
     // Step 2: Calculate how far we are from 100%
     const totalWeight = sum(adjustedWeights);
     const deficit = 1 - totalWeight;
-    
+
     if (Math.abs(deficit) < 0.000001) {
       break; // Stop if we're close enough to 100%
     }
 
     // Step 3: Distribute the deficit while respecting constraints
-    const adjustableIndices = adjustedWeights.map((w, i) => {
-      if (deficit > 0 && w < maxWeights[i]) return i;
-      if (deficit < 0 && w > minWeights[i]) return i;
-      return -1;
-    }).filter(i => i !== -1);
+    const adjustableIndices = adjustedWeights
+      .map((w, i) => {
+        if (deficit > 0 && w < maxWeights[i]) return i;
+        if (deficit < 0 && w > minWeights[i]) return i;
+        return -1;
+      })
+      .filter((i) => i !== -1);
 
     if (adjustableIndices.length === 0) {
-      console.warn('Cannot satisfy constraints - sum may not equal 100%');
+      console.warn("Cannot satisfy constraints - sum may not equal 100%");
       break;
     }
 
     // Step 4: Distribute deficit equally among adjustable weights
     const adjustment = deficit / adjustableIndices.length;
-    adjustableIndices.forEach(i => {
+    adjustableIndices.forEach((i) => {
       adjustedWeights[i] += adjustment;
     });
 
@@ -257,7 +259,7 @@ function enforceIndividualWeightConstraints(
   }
 
   if (iterations === maxIterations) {
-    console.warn('Max iterations reached while trying to satisfy constraints');
+    console.warn("Max iterations reached while trying to satisfy constraints");
   }
 
   return adjustedWeights;

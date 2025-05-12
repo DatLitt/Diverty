@@ -259,10 +259,19 @@ export default function Step1({
     } | null = null;
 
     try {
+<<<<<<< HEAD
       if (!selectedStocks.some(
         (s) => s.symbol === stock.symbol && s.quoteType === stock.quoteType
       )) {
         console.log("fetched")
+=======
+      if (
+        !selectedStocks.some(
+          (s) => s.symbol === stock.symbol && s.quoteType === stock.quoteType
+        )
+      ) {
+        console.log("fetched");
+>>>>>>> 34fc19248ca950727afd3a90666fcd813458c754
         const response = await fetch(
           `/api/selectStock?symbol=${encodeURIComponent(stock.symbol)}`
         );
@@ -313,7 +322,13 @@ export default function Step1({
         <div className={styles.setupHeader}>
           <div className={styles.setupTitle}>
             <DatePicker
-              sx={{ width: "27%" }}
+              sx={{
+                width: {
+                  xs: "33%", // phones
+                  // sm: "50%", // tablets
+                  md: "27%", // desktops
+                },
+              }}
               label="Start Date"
               value={dayjs(startDate)}
               onChange={(date) => validateAndSetStartDate(date)}
@@ -329,7 +344,13 @@ export default function Step1({
               }}
             />
             <DatePicker
-              sx={{ width: "27%" }}
+              sx={{
+                width: {
+                  xs: "33%", // phones
+                  // sm: "50%", // tablets
+                  md: "27%", // desktops
+                },
+              }}
               label="End Date"
               value={dayjs(endDate)}
               onChange={(date) => validateAndSetEndDate(date)}
@@ -365,7 +386,13 @@ export default function Step1({
             )}
 
             <FormControl
-              sx={{ width: "20%", minHeight: "max-content" }}
+              sx={{
+                width: {
+                  xs: "33%", // phones
+                  sm: "30%", // tablets
+                  md: "20%", // desktops
+                },
+              }}
               size="small"
             >
               <InputLabel id="demo-simple-select-label">Interval</InputLabel>
@@ -509,7 +536,7 @@ export default function Step1({
           </div>
         )}
         <div className={styles.selectedStocks}>
-          <div className={styles.selectedStocksHeader}>
+          {/* <div className={styles.selectedStocksHeader}>
             <h3>Selected Stocks</h3>
             <button
               className="dangerButton"
@@ -519,8 +546,10 @@ export default function Step1({
             >
               <Delete />
             </button>
-          </div>
+          </div> */}
+
           {selectedStocks.length > 0 ? (
+<<<<<<< HEAD
             <ul className={styles.stockList}>
               {selectedStocks.map((stock) => (
                 <li
@@ -551,6 +580,52 @@ export default function Step1({
                 </li>
               ))}
             </ul>
+=======
+            <table className={styles.stockTable}>
+              <thead>
+                <tr>
+                  <th>Selected Stocks</th>
+                  <th>Price</th>
+                  <th>Change Rate</th>
+                  <th>Asset</th>
+                  <th>
+                    <button
+                      className="dangerButton"
+                      onClick={() => {
+                        setSelectedStocks([]);
+                      }}
+                    >
+                      Clear
+                    </button>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedStocks.map((stock) => (
+                  <tr key={`${stock.symbol}-${stock.quoteType}`}>
+                    <td>{stock.shortname}</td>
+                    <td>
+                      {stock.price !== undefined ? stock.price : "no price"}
+                    </td>
+                    <td>
+                      {stock.changePercent !== undefined
+                        ? stock.changePercent
+                        : "no price"}
+                    </td>
+                    <td>{stock.sector || "no price"}</td>
+                    <td>
+                      <button
+                        onClick={() => handleStockSelect(stock)}
+                        className="deleteButton"
+                      >
+                        <Clear />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+>>>>>>> 34fc19248ca950727afd3a90666fcd813458c754
           ) : (
             <p className={styles.emptyMessage}>No stocks selected</p>
           )}

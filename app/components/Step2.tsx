@@ -20,24 +20,37 @@ export default function Step2({
   setValue,
   minWeights,
   maxWeights,
+  optimizationType,
+  constraintValue,
+  setOptimizationType,
+  setConstraintValue,
+  expandedIndices,
+  setExpandedIndices,
 }: {
   setMinWeights: (weights: number[]) => void;
   setMaxWeights: (weights: number[]) => void;
   setValue: (value: string) => void;
+  setOptimizationType: (
+    value: "riskConstrained" | "minRisk" | "returnConstrained" | "noRiskLimit"
+  ) => void;
+  setConstraintValue: (value: number) => void;
+  setExpandedIndices: React.Dispatch<React.SetStateAction<Set<number>>>;
   minWeights: number[];
+  optimizationType:
+    | "riskConstrained"
+    | "minRisk"
+    | "returnConstrained"
+    | "noRiskLimit";
   maxWeights: number[];
+  constraintValue: number;
+  expandedIndices: Set<number>;
 }) {
   const [test123, setTest123] = useState(0);
   const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
   const [isCalculating, setIsCalculating] = useState(false);
-  const [optimizationType, setOptimizationType] = useState<
-    "riskConstrained" | "minRisk" | "returnConstrained" | "noRiskLimit"
-  >("riskConstrained");
-  const [constraintValue, setConstraintValue] = useState(5);
+
   const [weightError, setWeightError] = useState<string | null>(null);
-  const [expandedIndices, setExpandedIndices] = useState<Set<number>>(
-    new Set()
-  );
+
   const [tempInputValues, setTempInputValues] = useState<{
     [key: string]: string;
   }>({});
@@ -146,8 +159,8 @@ export default function Step2({
 
   const handleHeatmap = () => {
     const returns = calculateReturns(data);
-    const labels = data.map(stock => stock.ticker);
-    const correlationMatrix =  calculateCorrelation(returns);
+    const labels = data.map((stock) => stock.ticker);
+    const correlationMatrix = calculateCorrelation(returns);
     console.log(labels);
     const series = correlationMatrix.map((row, rowIndex) => ({
       name: labels[rowIndex],
@@ -159,54 +172,54 @@ export default function Step2({
     const div = document.getElementById("myDiv") || undefined;
     const options = {
       chart: {
-        type: 'heatmap',
-        height: 350
+        type: "heatmap",
+        height: 350,
       },
       dataLabels: {
-        enabled: false
+        enabled: false,
       },
       title: {
-        text: 'Stock Correlation Matrix'
+        text: "Stock Correlation Matrix",
       },
       xaxis: {
-        type: 'category'
+        type: "category",
       },
       colors: ["#008FFB"],
       colorScale: {
         ranges: [
-          { from: 0, to: 0.3, color: '#FF4560', name: 'Low' },
-          { from: 0.3, to: 0.7, color: '#FEB019', name: 'Medium' },
-          { from: 0.7, to: 1, color: '#00E396', name: 'High' }
-        ]
-      }
-    } as  ApexCharts.ApexOptions;
-      return (  <Chart
+          { from: 0, to: 0.3, color: "#FF4560", name: "Low" },
+          { from: 0.3, to: 0.7, color: "#FEB019", name: "Medium" },
+          { from: 0.7, to: 1, color: "#00E396", name: "High" },
+        ],
+      },
+    } as ApexCharts.ApexOptions;
+    return (
+      <Chart
         options={options}
         series={series}
         type="heatmap"
         width={div?.offsetWidth! - 40}
         height={"100%"}
-      />)
+      />
+    );
   };
 
+  const handleResize = () => {
+    setTest123(test123 + 1); // Call the function to recalculate on resize
+    console.log("Resized", test123);
+  };
 
-  
-    const handleResize = () => {
-      setTest123(test123 + 1); // Call the function to recalculate on resize
-      console.log("Resized", test123);
-    };
-  
-    useEffect(() => {
-      // Check if window is defined (we're in the browser)
-      if (typeof window !== "undefined") {
-        window.addEventListener("resize", handleResize);
-  
-        // Cleanup function to remove event listener
-        return () => {
-          window.removeEventListener("resize", handleResize);
-        };
-      }
-    }, [test123]);
+  useEffect(() => {
+    // Check if window is defined (we're in the browser)
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", handleResize);
+
+      // Cleanup function to remove event listener
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
+    }
+  }, [test123]);
 
   ///////////////////////////////
 
@@ -322,7 +335,7 @@ export default function Step2({
 
             {optimizationType !== "minRisk" &&
               optimizationType !== "noRiskLimit" && (
-                <div>
+                <div style={{ display: "flex", alignItems: "center" }}>
                   <input
                     className={styles.numberInput100}
                     type="number"

@@ -13,8 +13,8 @@
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^7.0.1",
     "@mui/lab": "^7.0.0-beta.11",
-    "@mui/material": "^7.0.1",
-    "@mui/x-date-pickers": "^7.28.3",
+    "@mui/material": "^7.0.2",
+    "@mui/x-date-pickers": "^7.29.1",
     "apexcharts": "^4.5.0",
     "dayjs": "^1.11.13",
     "mathjs": "^14.3.1",
@@ -29,6 +29,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "eslint": "^9.26.0",
     "typescript": "^5"
   }
 }

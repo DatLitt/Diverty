@@ -145,6 +145,30 @@
   justify-content: space-between;
   align-items: center;
 }
+.stockTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+.stockTable tbody tr {
+  height: fit-content;
+}
+.stockTable th,
+.stockTable td {
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  height: 100%;
+}
+
+.stockTable th:last-child,
+.stockTable td:last-child {
+  text-align: right;
+}
+
+.stockTable th {
+  background-color: #f9f9f9;
+  font-weight: 600;
+}
 .MuiInputBase-root {
   height: 40px !important;
   color: red;
@@ -157,6 +181,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  overflow-x: auto;
 }
 .stockList {
   width: 100%;
@@ -189,7 +214,6 @@
   display: flex;
 
   gap: 20px;
-
 }
 .step2Header {
   width: 100%;
@@ -290,4 +314,35 @@
   border: none;
   border-bottom: 1px solid var(--border);
   padding-left: 10px;
+}
+
+@media (max-width: 480px) {
+  .setupHeader {
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 10px;
+
+    justify-content: space-between;
+  }
+  .setupTitle {
+    width: 100%;
+    gap: 5px;
+  }
+  .step2Header {
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    justify-content: space-between;
+    gap: 5px;
+  }
+}
+@media (max-width: 768px) {
+  .setupHeader {
+    gap: 20px;
+  }
+  .setupTitle {
+    gap: 5px;
+  }
 }
