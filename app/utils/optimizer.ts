@@ -5,9 +5,9 @@ import { Portfolio } from "../types/test";
 export function geneticOptimization(
   meanReturnsArr: number[],
   covMatrix: number[][],
-  populationSize = 100,
-  generations = 50,
-  mutationRate = 0.1,
+  populationSize = 10000,
+  generations = 70,
+  mutationRate = 0.07,
   constraint = 0.02,
   strategy:
     | "minRisk"
@@ -82,7 +82,8 @@ export function geneticOptimization(
       const parent1 = selectParent(population);
       const parent2 = selectParent(population);
       let child = crossover(parent1, parent2);
-      child = mutate(child, mutationRate);
+      const newMutant = mutationRate * (1 - gen / generations);
+      child = mutate(child, newMutant);
 
       // Apply individual weight constraints
       child.weights = enforceIndividualWeightConstraints(
@@ -110,6 +111,7 @@ export function geneticOptimization(
   }
 
   // Return best portfolio
+
   return population[0];
 }
 
@@ -171,7 +173,7 @@ function calculateRiskConstrainedFitness(
   stdConstraint: number
 ): number {
   if (portfolio.stdDev > stdConstraint) {
-    return -1;
+    return -portfolio.stdDev;
   }
   return portfolio.meanReturn;
 }
@@ -193,12 +195,23 @@ function selectParent(population: Portfolio[]): Portfolio {
 }
 
 function crossover(parent1: Portfolio, parent2: Portfolio): Portfolio {
-  // Single point crossover
-  const crossoverPoint = Math.floor(Math.random() * parent1.weights.length);
-  const childWeights = [
-    ...parent1.weights.slice(0, crossoverPoint),
-    ...parent2.weights.slice(crossoverPoint),
-  ];
+  const numCrossoverPoints = Math.floor(Math.random() * (3 - 1) + 1); // Choose between 1 and 2 crossover points
+  const crossoverPoints = [];
+
+  // Randomly select crossover points
+  for (let i = 0; i < numCrossoverPoints; i++) {
+    crossoverPoints.push(Math.floor(Math.random() * parent1.weights.length));
+  }
+  crossoverPoints.sort((a, b) => a - b); // Sort for correct ordering
+
+  // Generate child weights by alternating parent segments
+  let childWeights = [...parent1.weights];
+  let swap = false;
+
+  for (let i = 0; i < parent1.weights.length; i++) {
+    if (crossoverPoints.includes(i)) swap = !swap; // Toggle swap on crossover points
+    if (swap) childWeights[i] = parent2.weights[i]; // Swap segments
+  }
 
   return {
     weights: childWeights,
@@ -211,7 +224,7 @@ function crossover(parent1: Portfolio, parent2: Portfolio): Portfolio {
 function mutate(portfolio: Portfolio, mutationRate: number): Portfolio {
   const mutatedWeights = portfolio.weights.map((weight) => {
     if (Math.random() < mutationRate) {
-      return weight * (1 + (Math.random() - 0.5) * 0.2); // Mutate by ±10%
+      return weight * (1 + gaussianRandom(0, mutationRate)); // Random gaussian mutation
     }
     return weight;
   });
@@ -273,4 +286,11 @@ function enforceIndividualWeightConstraints(
   }
 
   return adjustedWeights;
+}
+
+function gaussianRandom(mean = 0, stdDev = 1): number {
+  let u1 = Math.random();
+  let u2 = Math.random();
+  let z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+  return z0 * stdDev + mean; // Scale by standard deviation and shift by mean
 }

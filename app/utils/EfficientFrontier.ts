@@ -1,11 +1,11 @@
 import { geneticOptimization } from "../utils/optimizer"; // adjust import
 import { Portfolio } from "../types/test"; // adjust import
 
-export async function computeEfficientFrontier(
+export function computeEfficientFrontier(
   meanReturns: number[],
   covMatrix: number[][],
   numPoints = 50
-): Promise<Portfolio[]> {
+): Portfolio[] {
   const frontier: Portfolio[] = [];
   const minReturn = geneticOptimization(
     meanReturns,
@@ -15,7 +15,7 @@ export async function computeEfficientFrontier(
     0.1, // mutation rate
     0.02, // risk constraint
     "minRisk" // strategy
-  ).meanReturn;
+  ).stdDev;
   const maxReturn = geneticOptimization(
     meanReturns,
     covMatrix,
@@ -24,7 +24,7 @@ export async function computeEfficientFrontier(
     0.1, // mutation rate
     0.02, // risk constraint
     "noRiskLimit" // strategy
-  ).meanReturn;
+  ).stdDev;
 
   for (let i = 0; i < numPoints; i++) {
     const targetReturn =
@@ -33,11 +33,11 @@ export async function computeEfficientFrontier(
     const portfolio = geneticOptimization(
       meanReturns,
       covMatrix,
-      100, // population size
-      50, // generations
-      0.1, // mutation rate
+      200, // population size
+      75, // generations
+      0.25, // mutation rate
       targetReturn,
-      "returnConstrained"
+      "riskConstrained"
     );
 
     frontier.push(portfolio);
