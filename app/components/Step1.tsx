@@ -259,19 +259,12 @@ export default function Step1({
     } | null = null;
 
     try {
-<<<<<<< HEAD
-      if (!selectedStocks.some(
-        (s) => s.symbol === stock.symbol && s.quoteType === stock.quoteType
-      )) {
-        console.log("fetched")
-=======
       if (
         !selectedStocks.some(
           (s) => s.symbol === stock.symbol && s.quoteType === stock.quoteType
         )
       ) {
         console.log("fetched");
->>>>>>> 34fc19248ca950727afd3a90666fcd813458c754
         const response = await fetch(
           `/api/selectStock?symbol=${encodeURIComponent(stock.symbol)}`
         );
@@ -549,38 +542,6 @@ export default function Step1({
           </div> */}
 
           {selectedStocks.length > 0 ? (
-<<<<<<< HEAD
-            <ul className={styles.stockList}>
-              {selectedStocks.map((stock) => (
-                <li
-                  key={`${stock.symbol}-${stock.quoteType}`}
-                  className={styles.stockItem}
-                >
-                  <span>{stock.shortname}</span>
-                  <span>
-                    {stock.price !== undefined ? `${stock.price}` : "no price"}
-                  </span>
-                  <span>
-                    {stock.changePercent !== undefined
-                      ? `${stock.changePercent}`
-                      : "no price"}
-                  </span>
-                  <span>
-                    {stock.sector !== undefined
-                      ? `${stock.sector}`
-                      : "no price"}
-                  </span>
-
-                  <button
-                    onClick={() => handleStockSelect(stock)}
-                    className="deleteButton"
-                  >
-                    <Clear />
-                  </button>
-                </li>
-              ))}
-            </ul>
-=======
             <table className={styles.stockTable}>
               <thead>
                 <tr>
@@ -625,7 +586,6 @@ export default function Step1({
                 ))}
               </tbody>
             </table>
->>>>>>> 34fc19248ca950727afd3a90666fcd813458c754
           ) : (
             <p className={styles.emptyMessage}>No stocks selected</p>
           )}
