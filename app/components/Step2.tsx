@@ -56,6 +56,7 @@ export default function Step2({
     [key: string]: string;
   }>({});
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const [showFrontier, setShowFrontier] = useState(false);
 
   const { data, bestPortfolio, result, setData, setResults, setPortfolio } =
     useData();
@@ -159,6 +160,7 @@ export default function Step2({
   };
 
   const handleHeatmap = () => {
+    console.log("handleHeatmap");
     const returns = calculateReturns(data);
     const labels = data.map((stock) => stock.ticker);
     const correlationMatrix = calculateCorrelation(returns);
@@ -204,7 +206,113 @@ export default function Step2({
       />
     );
   };
+  const handleFrontier = () => {
+    const returns = calculateReturns(data);
+    const meanRets = meanReturns(returns);
+    const covMat = covarianceMatrix(returns);
+    const frontier = computeEfficientFrontier(meanRets, covMat, 50);
+    const frontierData = frontier.map((p) => ({
+      x: p.stdDev * 100,
+      y: p.meanReturn * 100,
+    }));
+    const series = [
+      {
+        name: "Efficient Frontier",
+        data: frontierData,
+      },
+    ];
+    console.log("Efficient Frontier Data:", series);
 
+    const chartOptions: ApexCharts.ApexOptions = {
+      chart: {
+        type: "line",
+        zoom: {
+          enabled: true,
+          type: "xy",
+        },
+        animations: {
+          enabled: false,
+        },
+        events: {
+          dataPointSelection: function (event, chartContext, config) {
+            const { seriesIndex, dataPointIndex } = config;
+            const x = config.w.globals.seriesX[seriesIndex][dataPointIndex];
+            const y = config.w.globals.series[seriesIndex][dataPointIndex];
+
+            alert(
+              `Clicked Point:\nRisk: ${x.toFixed(2)}%\nReturn: ${y.toFixed(2)}%`
+            );
+          },
+        },
+      },
+      xaxis: {
+        title: {
+          text: "Portfolio Risk (Standard Deviation %)",
+          style: {
+            fontSize: "14px",
+            fontWeight: 600,
+          },
+        },
+        tickAmount: 10,
+        decimalsInFloat: 2,
+        labels: {
+          formatter: (value: string) => `${parseFloat(value)?.toFixed(2)}%`,
+        },
+      },
+      yaxis: {
+        title: {
+          text: "Expected Return (%)",
+          style: {
+            fontSize: "14px",
+            fontWeight: 600,
+          },
+        },
+        tickAmount: 10,
+        decimalsInFloat: 2,
+        labels: {
+          formatter: (val: number) => `${val?.toFixed(2)}%`,
+        },
+      },
+      tooltip: {
+        shared: false,
+        intersect: true,
+        custom: function ({ seriesIndex, dataPointIndex, w }: any) {
+          console.log(frontier);
+          const y = w.globals.series[seriesIndex][dataPointIndex];
+          const x = w.globals.seriesX[seriesIndex][dataPointIndex];
+          return `
+      <div class="custom-tooltip">
+        <span>Risk: ${x.toFixed(2)}%</span><br/>
+        <span>Return: ${y.toFixed(2)}%</span>
+      </div>
+    `;
+        },
+      },
+      markers: {
+        size: 4,
+        strokeWidth: 0,
+      },
+      grid: {
+        borderColor: "#f1f1f1",
+      },
+      theme: {
+        mode: "light",
+      },
+    };
+
+    const div = document.getElementById("myDiv");
+    const width = div ? div.offsetWidth - 40 : 800;
+
+    return (
+      <Chart
+        options={chartOptions}
+        series={series}
+        type="line"
+        width={div?.offsetWidth! - 40}
+        height={"100%"}
+      />
+    );
+  };
   const handleResize = () => {
     setTest123(test123 + 1); // Call the function to recalculate on resize
     console.log("Resized", test123);
@@ -294,8 +402,7 @@ export default function Step2({
       console.log("Portfolio calculation result:", result);
       console.log("Best Portfolio:", bestPortfolio);
       /////////////////////test frontier
-      const frontier = await computeEfficientFrontier(meanRets, covMat, 50);
-      console.log("Efficient Frontier:", frontier);
+
       /////////////////////////////////////////
     } catch (error) {
       console.error("Error in handleCalculate:", error);
@@ -306,7 +413,7 @@ export default function Step2({
 
   return (
     <div className={styles.step2Box}>
-      {!showHeatmap && (
+      {!showHeatmap && !showFrontier && (
         <div className={styles.setupBox}>
           <div className={styles.step2Header}>
             <FormControl
@@ -362,10 +469,19 @@ export default function Step2({
               className="primaryButton"
               onClick={() => {
                 setShowHeatmap(true);
-                handleHeatmap();
+                // handleHeatmap();
               }}
             >
               Heatmap
+            </button>
+            <button
+              className="primaryButton"
+              onClick={() => {
+                setShowFrontier(true);
+                // handleFrontier();
+              }}
+            >
+              Efficient Frontier
             </button>
           </div>
           <div className={styles.selectedStocks}>
@@ -509,6 +625,19 @@ export default function Step2({
             </button>
           </div>
           <div className={styles.treeMapContainer}>{handleHeatmap()}</div>
+        </div>
+      )}
+      {showFrontier && (
+        <div className={styles.setupBox}>
+          <div className={styles.step2Header}>
+            <button
+              className="primaryButton"
+              onClick={() => setShowFrontier(false)}
+            >
+              Back
+            </button>
+          </div>
+          <div className={styles.treeMapContainer}>{handleFrontier()}</div>
         </div>
       )}
     </div>
