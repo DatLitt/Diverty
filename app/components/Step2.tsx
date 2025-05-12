@@ -13,6 +13,7 @@ import {
 } from "../utils/mpt";
 import { geneticOptimization } from "../utils/optimizer";
 import dynamic from "next/dynamic";
+import { computeEfficientFrontier } from "../utils/EfficientFrontier";
 
 export default function Step2({
   setMaxWeights,
@@ -20,37 +21,24 @@ export default function Step2({
   setValue,
   minWeights,
   maxWeights,
-  optimizationType,
-  constraintValue,
-  setOptimizationType,
-  setConstraintValue,
-  expandedIndices,
-  setExpandedIndices,
 }: {
   setMinWeights: (weights: number[]) => void;
   setMaxWeights: (weights: number[]) => void;
   setValue: (value: string) => void;
-  setOptimizationType: (
-    value: "riskConstrained" | "minRisk" | "returnConstrained" | "noRiskLimit"
-  ) => void;
-  setConstraintValue: (value: number) => void;
-  setExpandedIndices: React.Dispatch<React.SetStateAction<Set<number>>>;
   minWeights: number[];
-  optimizationType:
-    | "riskConstrained"
-    | "minRisk"
-    | "returnConstrained"
-    | "noRiskLimit";
   maxWeights: number[];
-  constraintValue: number;
-  expandedIndices: Set<number>;
 }) {
   const [test123, setTest123] = useState(0);
   const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
   const [isCalculating, setIsCalculating] = useState(false);
-
+  const [optimizationType, setOptimizationType] = useState<
+    "riskConstrained" | "minRisk" | "returnConstrained" | "noRiskLimit"
+  >("riskConstrained");
+  const [constraintValue, setConstraintValue] = useState(5);
   const [weightError, setWeightError] = useState<string | null>(null);
-
+  const [expandedIndices, setExpandedIndices] = useState<Set<number>>(
+    new Set()
+  );
   const [tempInputValues, setTempInputValues] = useState<{
     [key: string]: string;
   }>({});
@@ -292,6 +280,10 @@ export default function Step2({
       }
       console.log("Portfolio calculation result:", result);
       console.log("Best Portfolio:", bestPortfolio);
+      /////////////////////test frontier
+      const frontier = await computeEfficientFrontier(meanRets, covMat, 50);
+      console.log("Efficient Frontier:", frontier);
+      /////////////////////////////////////////
     } catch (error) {
       console.error("Error in handleCalculate:", error);
     } finally {

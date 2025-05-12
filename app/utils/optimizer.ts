@@ -14,10 +14,20 @@ export function geneticOptimization(
     | "noRiskLimit"
     | "riskConstrained"
     | "returnConstrained" = "riskConstrained",
-  minWeights: number[] = [],
-  maxWeights: number[] = []
+  minWeights?: number[],
+  maxWeights?: number[]
 ): Portfolio {
   // Use default constraints if not provided
+  const numAssets = meanReturnsArr.length;
+
+  // Set default minWeights and maxWeights dynamically if not provided
+  if (!minWeights || minWeights.length === 0) {
+    minWeights = Array(numAssets).fill(0);
+  }
+
+  if (!maxWeights || maxWeights.length === 0) {
+    maxWeights = Array(numAssets).fill(1);
+  }
   if (sum(minWeights) > 1 || sum(maxWeights) < 1) {
     throw new Error(
       "Sum of minWeights cannot exceed 1 or sum of maxWeight cannot below 1."
