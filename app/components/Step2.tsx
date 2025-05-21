@@ -56,6 +56,7 @@ export default function Step2({
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [frontier, setFrontier] = useState<Portfolio[]>([]);
   const [showFrontier, setShowFrontier] = useState(false);
+  const [isFrontierLoading, setIsFrontierLoading] = useState(true);
 
   const { data, bestPortfolio, result, setData, setResults, setPortfolio } =
     useData();
@@ -64,6 +65,22 @@ export default function Step2({
   const covMat = covarianceMatrix(returns);
   const labels = data.map((stock) => stock.ticker);
   const correlationMatrix = calculateCorrelation(returns);
+
+  useEffect(() => {
+    const initializeFrontier = async () => {
+      if (
+        data.length > 0 &&
+        meanRets.length > 0 &&
+        covMat.length > 0 &&
+        frontier.length === 0
+      ) {
+        const frontierData = await fetchFrontier();
+        setFrontier(frontierData);
+      }
+    };
+
+    initializeFrontier();
+  }, [data, meanRets, covMat]);
 
   const toggleIndex = (index: number) => {
     setExpandedIndices((prev) => {
@@ -209,6 +226,7 @@ export default function Step2({
     );
   };
   const fetchFrontier = async (): Promise<Portfolio[]> => {
+    setIsFrontierLoading(true);
     try {
       const response = await fetch("/api/frontier", {
         method: "POST",
@@ -231,15 +249,12 @@ export default function Step2({
     } catch (error) {
       console.error("Error fetching frontier:", error);
       return [];
+    } finally {
+      setIsFrontierLoading(false);
     }
   };
 
   const handleFrontier = () => {
-    if (frontier.length === 0) {
-      fetchFrontier().then((response) => {
-        setFrontier(response);
-      });
-    }
     const frontierData = frontier.map((p) => ({
       x: p.stdDev * 100,
       y: p.meanReturn * 100,
@@ -526,10 +541,10 @@ export default function Step2({
               className="primaryButton"
               onClick={() => {
                 setShowFrontier(true);
-                // handleFrontier();
               }}
+              disabled={isFrontierLoading}
             >
-              Efficient Frontier
+              {isFrontierLoading ? "Loading Frontier..." : "Efficient Frontier"}
             </button>
           </div>
           <div className={styles.selectedStocks}>
