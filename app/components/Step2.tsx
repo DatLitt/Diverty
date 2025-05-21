@@ -56,7 +56,7 @@ export default function Step2({
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [frontier, setFrontier] = useState<Portfolio[]>([]);
   const [showFrontier, setShowFrontier] = useState(false);
-  const [isFrontierLoading, setIsFrontierLoading] = useState(true);
+  const [isFrontierLoading, setIsFrontierLoading] = useState(false);
 
   const { data, bestPortfolio, result, setData, setResults, setPortfolio } =
     useData();
@@ -66,21 +66,21 @@ export default function Step2({
   const labels = data.map((stock) => stock.ticker);
   const correlationMatrix = calculateCorrelation(returns);
 
-  useEffect(() => {
-    const initializeFrontier = async () => {
-      if (
-        data.length > 0 &&
-        meanRets.length > 0 &&
-        covMat.length > 0 &&
-        frontier.length === 0
-      ) {
-        const frontierData = await fetchFrontier();
-        setFrontier(frontierData);
-      }
-    };
+  // useEffect(() => {
+  //   const initializeFrontier = async () => {
+  //     if (
+  //       data.length > 0 &&
+  //       meanRets.length > 0 &&
+  //       covMat.length > 0 &&
+  //       frontier.length === 0
+  //     ) {
+  //       const frontierData = await fetchFrontier();
+  //       setFrontier(frontierData);
+  //     }
+  //   };
 
-    initializeFrontier();
-  }, [data, meanRets, covMat]);
+  //   initializeFrontier();
+  // }, [data, meanRets, covMat]);
 
   const toggleIndex = (index: number) => {
     setExpandedIndices((prev) => {
@@ -226,7 +226,7 @@ export default function Step2({
     );
   };
   const fetchFrontier = async (): Promise<Portfolio[]> => {
-    setIsFrontierLoading(true);
+    // setIsFrontierLoading(true);
     try {
       const response = await fetch("/api/frontier", {
         method: "POST",
@@ -250,11 +250,21 @@ export default function Step2({
       console.error("Error fetching frontier:", error);
       return [];
     } finally {
-      setIsFrontierLoading(false);
+      // setIsFrontierLoading(false);
     }
   };
 
   const handleFrontier = () => {
+    if (frontier.length === 0) {
+      fetchFrontier().then((response) => {
+        if (response) {
+          setFrontier(response);
+          console.log("Frontier handled:", frontier);
+        } else {
+          console.error("Failed to fetch frontier");
+        }
+      });
+    }
     const frontierData = frontier.map((p) => ({
       x: p.stdDev * 100,
       y: p.meanReturn * 100,
