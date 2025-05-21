@@ -1,7 +1,7 @@
 "use client";
 import { Edit } from "@mui/icons-material";
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
-import { Stock } from "../types/test";
+import { Portfolio, Stock } from "../types/test";
 import styles from "../portfolio/page.module.css";
 import React, { useEffect, useState } from "react";
 import { useData } from "../context/DataContext";
@@ -11,9 +11,7 @@ import {
   covarianceMatrix,
   calculateCorrelation,
 } from "../utils/mpt";
-import { geneticOptimization } from "../utils/optimizer";
 import dynamic from "next/dynamic";
-import { computeEfficientFrontier } from "../utils/EfficientFrontier";
 
 export default function Step2({
   setMaxWeights,
@@ -56,10 +54,14 @@ export default function Step2({
     [key: string]: string;
   }>({});
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const [frontier, setFrontier] = useState<Portfolio[]>([]);
   const [showFrontier, setShowFrontier] = useState(false);
 
   const { data, bestPortfolio, result, setData, setResults, setPortfolio } =
     useData();
+  const returns = calculateReturns(data);
+  const meanRets = meanReturns(returns);
+  const covMat = covarianceMatrix(returns);
 
   const toggleIndex = (index: number) => {
     setExpandedIndices((prev) => {
@@ -161,7 +163,6 @@ export default function Step2({
 
   const handleHeatmap = () => {
     console.log("handleHeatmap");
-    const returns = calculateReturns(data);
     const labels = data.map((stock) => stock.ticker);
     const correlationMatrix = calculateCorrelation(returns);
     console.log(labels);
@@ -206,11 +207,38 @@ export default function Step2({
       />
     );
   };
+  const fetchFrontier = async (): Promise<Portfolio[]> => {
+    try {
+      const response = await fetch("/api/frontier", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          meanRets,
+          covMat,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch frontier");
+      }
+
+      const frontier = await response.json();
+      console.log("Frontier data:", frontier);
+      return frontier;
+    } catch (error) {
+      console.error("Error fetching frontier:", error);
+      return [];
+    }
+  };
+
   const handleFrontier = () => {
-    const returns = calculateReturns(data);
-    const meanRets = meanReturns(returns);
-    const covMat = covarianceMatrix(returns);
-    const frontier = computeEfficientFrontier(meanRets, covMat, 50);
+    if (frontier.length === 0) {
+      fetchFrontier().then((response) => {
+        setFrontier(response);
+      });
+    }
     const frontierData = frontier.map((p) => ({
       x: p.stdDev * 100,
       y: p.meanReturn * 100,
@@ -284,6 +312,10 @@ export default function Step2({
       <div class="custom-tooltip">
         <span>Risk: ${x.toFixed(2)}%</span><br/>
         <span>Return: ${y.toFixed(2)}%</span>
+        <span>Weights: ${frontier[dataPointIndex].weights
+          .map((weight: number) => (weight * 100).toFixed(2))
+          .join(", ")}</span>
+        
       </div>
     `;
         },
@@ -344,10 +376,6 @@ export default function Step2({
     console.log(isCalculating);
     await new Promise((resolve) => setTimeout(resolve, 0));
     try {
-      const returns = calculateReturns(data);
-      const meanRets = meanReturns(returns);
-      const covMat = covarianceMatrix(returns);
-
       if (meanRets.length !== data.length || covMat.length !== data.length) {
         console.log("Matrix dimension mismatch");
         return;
@@ -367,17 +395,26 @@ export default function Step2({
       console.log("maxWeightsToUse:", maxWeightsToUse);
       console.log("constraintValue:", constraintValue);
 
-      const bestPortfolio = geneticOptimization(
-        meanRets,
-        covMat,
-        500,
-        100,
-        0.1,
-        constraintValue / 100,
-        optimizationType,
-        minWeightsToUse,
-        maxWeightsToUse
-      );
+      const response = await fetch("/api/calculate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          meanRets,
+          covMat,
+          optimizationType,
+          constraintValue: constraintValue / 100,
+          minWeightsToUse,
+          maxWeightsToUse,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Optimization failed");
+      }
+
+      const bestPortfolio = await response.json();
 
       if (!bestPortfolio) {
         console.log("Optimization failed");
