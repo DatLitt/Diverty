@@ -222,6 +222,7 @@ export default function Step1({
   };
 
   const handleSearch = async () => {
+    setIsSearching(true);
     if (!searchQuery.trim()) return;
 
     setSearchResults([]); // Clear previous results
@@ -404,9 +405,24 @@ export default function Step1({
               type="text"
               value={searchQuery}
               ref={inputRef}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSearchQuery(value);
+                if (value.length >= 3) {
+                  handleSearch();
+                }
+                if (value.length < 3) {
+                  setShowDropdown(false);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSearch();
+                }
+              }}
               placeholder="Search stock..."
             />
+
             <button
               className={styles.searchButton}
               onClick={handleSearch}
@@ -565,15 +581,13 @@ export default function Step1({
                 {selectedStocks.map((stock) => (
                   <tr key={`${stock.symbol}-${stock.quoteType}`}>
                     <td>{stock.shortname}</td>
-                    <td>
-                      {stock.price !== undefined ? stock.price : "no price"}
-                    </td>
+                    <td>{stock.price !== undefined ? stock.price : "N/A"}</td>
                     <td>
                       {stock.changePercent !== undefined
                         ? stock.changePercent
-                        : "no price"}
+                        : "N/A"}
                     </td>
-                    <td>{stock.sector || "no price"}</td>
+                    <td>{stock.sector || "N/A"}</td>
                     <td>
                       <button
                         onClick={() => handleStockSelect(stock)}
