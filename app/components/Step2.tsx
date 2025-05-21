@@ -62,6 +62,8 @@ export default function Step2({
   const returns = calculateReturns(data);
   const meanRets = meanReturns(returns);
   const covMat = covarianceMatrix(returns);
+  const labels = data.map((stock) => stock.ticker);
+  const correlationMatrix = calculateCorrelation(returns);
 
   const toggleIndex = (index: number) => {
     setExpandedIndices((prev) => {
@@ -163,8 +165,7 @@ export default function Step2({
 
   const handleHeatmap = () => {
     console.log("handleHeatmap");
-    const labels = data.map((stock) => stock.ticker);
-    const correlationMatrix = calculateCorrelation(returns);
+
     console.log(labels);
     const series = correlationMatrix.map((row, rowIndex) => ({
       name: labels[rowIndex],
@@ -305,16 +306,28 @@ export default function Step2({
         shared: false,
         intersect: true,
         custom: function ({ seriesIndex, dataPointIndex, w }: any) {
-          console.log(frontier);
+          const result = labels
+            .filter((ticker): ticker is string => ticker !== undefined)
+            .map((ticker, i) => ({
+              ticker,
+              weight: Number(frontier[dataPointIndex].weights[i]),
+            }));
           const y = w.globals.series[seriesIndex][dataPointIndex];
           const x = w.globals.seriesX[seriesIndex][dataPointIndex];
           return `
       <div class="custom-tooltip">
         <span>Risk: ${x.toFixed(2)}%</span><br/>
         <span>Return: ${y.toFixed(2)}%</span>
-        <span>Weights: ${frontier[dataPointIndex].weights
-          .map((weight: number) => (weight * 100).toFixed(2))
-          .join(", ")}</span>
+        <div style="margin-top: 10px;">
+          <strong>Weights:</strong>
+          <ul>
+            ${result
+              .map(
+                (item) =>
+                  `<li>${item.ticker}: ${(item.weight * 100).toFixed(2)}%</li>`
+              )
+              .join("")}
+          </ul> 
         
       </div>
     `;
@@ -423,14 +436,12 @@ export default function Step2({
 
       setPortfolio(bestPortfolio);
 
-      const stockName = data
-        .map((obj: Stock) => obj.ticker)
-        .filter((ticker): ticker is string => !!ticker);
-
-      const result = stockName.map((ticker, i) => ({
-        ticker,
-        weight: bestPortfolio.weights[i],
-      }));
+      const result = labels
+        .filter((ticker): ticker is string => ticker !== undefined)
+        .map((ticker, i) => ({
+          ticker,
+          weight: Number(bestPortfolio.weights[i]),
+        }));
 
       setResults(result);
       if (bestPortfolio?.fitness > 0) {
