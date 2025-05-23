@@ -6,7 +6,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { meanRets, covMat } = body;
 
-    const frontier = computeEfficientFrontier(meanRets, covMat, 50);
+    const frontier = computeEfficientFrontier(meanRets, covMat, 20);
 
     return NextResponse.json(frontier);
   } catch (error) {

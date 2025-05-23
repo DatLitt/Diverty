@@ -10,8 +10,8 @@ export function computeEfficientFrontier(
   const minReturn = geneticOptimization(
     meanReturns,
     covMatrix,
-    100, // population size
-    50, // generations
+    200, // population size
+    100, // generations
     0.1, // mutation rate
     0.02, // risk constraint
     "minRisk" // strategy
@@ -19,8 +19,8 @@ export function computeEfficientFrontier(
   const maxReturn = geneticOptimization(
     meanReturns,
     covMatrix,
-    100, // population size
-    50, // generations
+    200, // population size
+    100, // generations
     0.1, // mutation rate
     0.02, // risk constraint
     "noRiskLimit" // strategy
@@ -33,8 +33,8 @@ export function computeEfficientFrontier(
     const portfolio = geneticOptimization(
       meanReturns,
       covMatrix,
-      200, // population size
-      75, // generations
+      180, // population size
+      70, // generations
       0.25, // mutation rate
       targetReturn,
       "riskConstrained"
