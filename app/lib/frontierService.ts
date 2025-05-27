@@ -35,7 +35,10 @@ class FrontierService {
         return;
       }
 
-      for (let i = 0; i < numPoints; i++) {
+      frontier.push(minReturn);
+      setFrontier([...frontier]);
+
+      for (let i = 1; i < numPoints - 1; i++) {
         while (this.isPaused) {
           await new Promise((resolve) => setTimeout(resolve, 100)); // Pause loop
         }
@@ -56,6 +59,8 @@ class FrontierService {
           setFrontier([...frontier]);
         }
       }
+      frontier.push(maxReturn);
+      setFrontier([...frontier]);
     } catch (error) {
       console.error("Error fetching frontier:", error);
     } finally {
@@ -79,8 +84,8 @@ class FrontierService {
         body: JSON.stringify({
           meanRets,
           covMat,
-          populationSize: 100, // Default population size
-          generations: 100, // Default generations
+          populationSize: 400, // Default population size
+          generations: 120, // Default generations
           optimizationType,
           constraintValue,
           minWeights: [],
