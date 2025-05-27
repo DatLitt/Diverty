@@ -7,6 +7,8 @@ export async function POST(request: Request) {
     const {
       meanRets,
       covMat,
+      populationSize,
+      generations,
       optimizationType,
       constraintValue,
       minWeights,
@@ -17,8 +19,8 @@ export async function POST(request: Request) {
     const bestPortfolio = geneticOptimization(
       meanRets,
       covMat,
-      500, // populationSize
-      100, // generations
+      populationSize, // populationSize
+      generations, // generations
       0.1, // mutationRate
       constraintValue,
       optimizationType,
