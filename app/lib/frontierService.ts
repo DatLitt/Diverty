@@ -53,7 +53,7 @@ class FrontierService {
 
         if (portfolio) {
           frontier.push(portfolio);
-          setFrontier(frontier.sort((a, b) => a.stdDev - b.stdDev));
+          setFrontier([...frontier]);
         }
       }
     } catch (error) {
@@ -68,7 +68,7 @@ class FrontierService {
     covMat: number[][],
     optimizationType: string,
     constraintValue: number
-  ): Promise<Portfolio | null> {
+  ): Promise<Portfolio> {
     if (!this.abortController) this.abortController = new AbortController();
     const { signal } = this.abortController;
 
@@ -79,6 +79,8 @@ class FrontierService {
         body: JSON.stringify({
           meanRets,
           covMat,
+          populationSize: 100, // Default population size
+          generations: 100, // Default generations
           optimizationType,
           constraintValue,
           minWeights: [],
@@ -95,10 +97,10 @@ class FrontierService {
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
         console.warn(`Fetch canceled: ${optimizationType}`);
-        return null;
+        return {} as Portfolio; // Return empty portfolio on abort
       }
       console.error("Error fetching single point:", error);
-      return null;
+      return {} as Portfolio; // Return null on error
     }
   }
 

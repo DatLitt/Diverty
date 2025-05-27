@@ -65,7 +65,7 @@ export default function Step2({
   const covMat = covarianceMatrix(returns);
   const labels = data.map((stock) => stock.ticker);
   const correlationMatrix = calculateCorrelation(returns);
-  const frontierPoints = 20;
+  const frontierPoints = 50;
 
   useEffect(() => {
     console.log("Step2 useEffect triggered", frontier);
@@ -87,6 +87,7 @@ export default function Step2({
     console.log("Frontier updated:", frontier);
     if (frontier.length === frontierPoints) {
       setIsFrontierLoading(false);
+      console.log("Frontier is fully loaded:", frontier);
     }
   }, [frontier]);
 
@@ -501,6 +502,8 @@ export default function Step2({
         body: JSON.stringify({
           meanRets,
           covMat,
+          populationSize: 500, // You can adjust this value
+          generations: 100, // You can adjust this value
           optimizationType,
           constraintValue: constraintValue / 100,
           minWeightsToUse,
