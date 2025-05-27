@@ -12,6 +12,7 @@ export async function POST(request: Request) {
       minWeights,
       maxWeights,
     } = body;
+    console.log(optimizationType);
 
     const bestPortfolio = geneticOptimization(
       meanRets,

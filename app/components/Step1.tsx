@@ -46,7 +46,7 @@ export default function Step1({
   const [isFetching, setIsFetching] = useState(false);
   const [tempValidData, setTempValidData] = useState<any[]>([]);
 
-  const { setData, setResults, setPortfolio } = useData();
+  const { setData, setResults, setPortfolio, setFrontier } = useData();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -70,6 +70,7 @@ export default function Step1({
 
     try {
       setData([]); // Clear previous data
+      setFrontier([]); // Clear frontier data
       const queryParams = new URLSearchParams({
         stockSymbols: stockSymbols.join(","),
         startDate: dayjs(startDate).format("YYYY-MM-DD"),
