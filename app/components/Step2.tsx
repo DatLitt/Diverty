@@ -3,7 +3,7 @@ import { Edit } from "@mui/icons-material";
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { Portfolio, Stock } from "../types/test";
 import styles from "../portfolio/page.module.css";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useData } from "../context/DataContext";
 import {
   calculateReturns,
@@ -12,6 +12,8 @@ import {
   calculateCorrelation,
 } from "../utils/mpt";
 import dynamic from "next/dynamic";
+import { min, re } from "mathjs";
+import { frontierService } from "../lib/frontierService";
 
 export default function Step2({
   setMaxWeights,
@@ -54,33 +56,39 @@ export default function Step2({
     [key: string]: string;
   }>({});
   const [showHeatmap, setShowHeatmap] = useState(false);
-  const [frontier, setFrontier] = useState<Portfolio[]>([]);
   const [showFrontier, setShowFrontier] = useState(false);
-  const [isFrontierLoading, setIsFrontierLoading] = useState(false);
+  const [isFrontierLoading, setIsFrontierLoading] = useState(true);
 
-  const { data, bestPortfolio, result, setData, setResults, setPortfolio } =
-    useData();
+  const { data, frontier, setFrontier, setResults, setPortfolio } = useData();
   const returns = calculateReturns(data);
   const meanRets = meanReturns(returns);
   const covMat = covarianceMatrix(returns);
   const labels = data.map((stock) => stock.ticker);
   const correlationMatrix = calculateCorrelation(returns);
+  const frontierPoints = 20;
 
-  // useEffect(() => {
-  //   const initializeFrontier = async () => {
-  //     if (
-  //       data.length > 0 &&
-  //       meanRets.length > 0 &&
-  //       covMat.length > 0 &&
-  //       frontier.length === 0
-  //     ) {
-  //       const frontierData = await fetchFrontier();
-  //       setFrontier(frontierData);
-  //     }
-  //   };
+  useEffect(() => {
+    console.log("Step2 useEffect triggered", frontier);
+    const initializeFrontier = async () => {
+      if (frontier.length === 0) {
+        frontierService.fetchFrontierSequentially(
+          frontierPoints,
+          meanRets,
+          covMat,
+          setFrontier
+        );
+      }
+    };
 
-  //   initializeFrontier();
-  // }, [data, meanRets, covMat]);
+    initializeFrontier();
+  }, []);
+
+  useEffect(() => {
+    console.log("Frontier updated:", frontier);
+    if (frontier.length === frontierPoints) {
+      setIsFrontierLoading(false);
+    }
+  }, [frontier]);
 
   const toggleIndex = (index: number) => {
     setExpandedIndices((prev) => {
@@ -225,46 +233,97 @@ export default function Step2({
       />
     );
   };
-  const fetchFrontier = async (): Promise<Portfolio[]> => {
-    // setIsFrontierLoading(true);
-    try {
-      const response = await fetch("/api/frontier", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          meanRets,
-          covMat,
-        }),
-      });
+  // const fetchFrontier = async (numPoints: number) => {
+  //   setIsFrontierLoading(true);
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch frontier");
-      }
+  //   try {
+  //     const minReturnResponse = await fetch("/api/calculate", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         meanRets,
+  //         covMat,
+  //         optimizationType: "minRisk",
+  //         constraintValue: constraintValue / 100,
+  //         minWeights: [],
+  //         maxWeights: [],
+  //       }),
+  //     });
+  //     const maxReturnResponse = await fetch("/api/calculate", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         meanRets,
+  //         covMat,
+  //         optimizationType: "noRiskLimit",
+  //         constraintValue: constraintValue / 100,
+  //         minWeights: [],
+  //         maxWeights: [],
+  //       }),
+  //     });
 
-      const frontier = await response.json();
-      console.log("Frontier data:", frontier);
-      return frontier;
-    } catch (error) {
-      console.error("Error fetching frontier:", error);
-      return [];
-    } finally {
-      // setIsFrontierLoading(false);
-    }
-  };
+  //     const minReturn = (await minReturnResponse.json()).meanReturn;
+  //     const maxReturn = (await maxReturnResponse.json()).meanReturn;
+
+  //     for (let i = 0; i < numPoints; i++) {
+  //       // If the pause flag is active, wait before starting next fetch.
+  //       while (pauseRef.current) {
+  //         await sleep(100); // Wait 100ms before checking again.
+  //       }
+
+  //       const targetReturn =
+  //         minReturn + (i / (numPoints - 1)) * (maxReturn - minReturn);
+  //       try {
+  //         const response = await fetch("/api/calculate", {
+  //           method: "POST",
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //           },
+  //           body: JSON.stringify({
+  //             meanRets,
+  //             covMat,
+  //             optimizationType: "returnConstrained",
+  //             constraintValue: targetReturn,
+  //             minWeights: [],
+  //             maxWeights: [],
+  //           }),
+  //         });
+  //         const point = await response.json();
+  //         setFrontier((prevFrontier) =>
+  //           [...prevFrontier, point].sort((a, b) => a.stdDev - b.stdDev)
+  //         );
+  //       } catch (error) {
+  //         console.error(
+  //           `Error fetching point ${i} for targetReturn ${targetReturn}`,
+  //           error
+  //         );
+  //         // Optionally, you could skip or retry here.
+  //       }
+  //     }
+  //     return;
+  //   } catch (error) {
+  //     console.error("Error fetching frontier:", error);
+  //     return [];
+  //   } finally {
+  //     setIsFrontierLoading(false);
+  //   }
+  // };
 
   const handleFrontier = () => {
-    if (frontier.length === 0) {
-      fetchFrontier().then((response) => {
-        if (response) {
-          setFrontier(response);
-          console.log("Frontier handled:", frontier);
-        } else {
-          console.error("Failed to fetch frontier");
-        }
-      });
-    }
+    // if (frontier.length === 0) {
+    //   fetchFrontier(5).then((response) => {
+    //     if (response) {
+    //       setFrontier(response);
+    //       console.log("Frontier handled:", frontier);
+    //     } else {
+    //       console.error("Failed to fetch frontier");
+    //     }
+    //   });
+    // }
     const frontierData = frontier.map((p) => ({
       x: p.stdDev * 100,
       y: p.meanReturn * 100,
@@ -404,6 +463,7 @@ export default function Step2({
 
   const handleCalculate = async () => {
     setIsCalculating(true); // Set isCalculating to true at the start of calculation
+    frontierService.pauseFetching(); // Pause any ongoing frontier fetching
     setPortfolio({
       meanReturn: 0,
       stdDev: 0,
@@ -480,6 +540,7 @@ export default function Step2({
     } catch (error) {
       console.error("Error in handleCalculate:", error);
     } finally {
+      frontierService.resumeFetching(); // Resume fetching frontier after calculation
       setIsCalculating(false); // ✅ Always runs
     }
   };
