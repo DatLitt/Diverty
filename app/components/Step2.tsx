@@ -59,7 +59,8 @@ export default function Step2({
   const [showFrontier, setShowFrontier] = useState(false);
   const [isFrontierLoading, setIsFrontierLoading] = useState(true);
 
-  const { data, frontier, setFrontier, setResults, setPortfolio } = useData();
+  const { data, frontier, setResults, setFrontier, setPortfolio } = useData();
+
   const returns = calculateReturns(data);
   const meanRets = meanReturns(returns);
   const covMat = covarianceMatrix(returns);
@@ -506,8 +507,8 @@ export default function Step2({
           generations: 100, // You can adjust this value
           optimizationType,
           constraintValue: constraintValue / 100,
-          minWeightsToUse,
-          maxWeightsToUse,
+          minWeights: minWeightsToUse,
+          maxWeights: maxWeightsToUse,
         }),
       });
 

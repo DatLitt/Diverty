@@ -56,7 +56,6 @@ class FrontierService {
 
         if (portfolio) {
           frontier.push(portfolio);
-          setFrontier([...frontier]);
         }
       }
       frontier.push(maxReturn);
