@@ -224,12 +224,12 @@ export default function Step1({
 
   const handleSearch = async () => {
     setIsSearching(true);
+    setShowDropdown(true);
     if (!searchQuery.trim()) return;
 
     setSearchResults([]); // Clear previous results
     setTimeout(() => {
       setIsSearching(false);
-      setShowDropdown(true);
     }, 500);
     setError(null);
 
@@ -427,11 +427,11 @@ export default function Step1({
             <button
               className={styles.searchButton}
               onClick={handleSearch}
-              disabled={isSearching}
+              disabled={isSearching || searchQuery.length === 0}
             >
               <Search />
             </button>
-            {showDropdown && searchResults.length > 0 && (
+            {showDropdown && (
               <ul className={[styles.stockList, styles.dropdown].join(" ")}>
                 {isSearching && <Spinner />}
                 {searchResults
@@ -464,11 +464,7 @@ export default function Step1({
                         onClick={() => {
                           handleStockSelect(stock);
                         }}
-                        className={`${styles.stockItem} ${
-                          selectedStocks.some((s) => s.symbol === stock.symbol)
-                            ? styles.selected
-                            : ""
-                        }`}
+                        className={`${styles.searchResult}`}
                       >
                         {stock.shortname} ({stock.symbol})
                       </li>
