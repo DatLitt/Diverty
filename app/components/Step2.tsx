@@ -3,7 +3,7 @@ import { Edit } from "@mui/icons-material";
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { Portfolio, Stock } from "../types/test";
 import styles from "../portfolio/page.module.css";
-import React, { useEffect, useRef, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 import { useData } from "../context/DataContext";
 import {
   calculateReturns,
@@ -70,6 +70,12 @@ export default function Step2({
 
   useEffect(() => {
     frontierService.resumeUpdateState();
+    return () => {
+      frontierService.stopUpdateState();
+    };
+  }, []);
+
+  useEffect(() => {
     console.log("Step2 useEffect triggered", frontier);
     const initializeFrontier = async () => {
       if (frontier.length === 0) {
@@ -748,7 +754,6 @@ export default function Step2({
             className="primaryButton"
             onClick={() => {
               handleCalculate();
-              frontierService.stopUpdateState();
             }}
             disabled={isCalculating}
           >
