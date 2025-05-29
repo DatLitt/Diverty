@@ -69,6 +69,7 @@ export default function Step2({
   const frontierPoints = 50;
 
   useEffect(() => {
+    frontierService.resumeUpdateState();
     console.log("Step2 useEffect triggered", frontier);
     const initializeFrontier = async () => {
       if (frontier.length === 0) {
@@ -509,6 +510,7 @@ export default function Step2({
           constraintValue: constraintValue / 100,
           minWeights: minWeightsToUse,
           maxWeights: maxWeightsToUse,
+          isFrontier: false, // Set to false for regular optimization
         }),
       });
 
@@ -607,6 +609,7 @@ export default function Step2({
               className="primaryButton"
               onClick={() => {
                 setShowHeatmap(true);
+                frontierService.stopUpdateState();
                 // handleHeatmap();
               }}
             >
@@ -745,6 +748,7 @@ export default function Step2({
             className="primaryButton"
             onClick={() => {
               handleCalculate();
+              frontierService.stopUpdateState();
             }}
             disabled={isCalculating}
           >
@@ -757,7 +761,10 @@ export default function Step2({
           <div className={styles.step2Header}>
             <button
               className="primaryButton"
-              onClick={() => setShowHeatmap(false)}
+              onClick={() => {
+                setShowHeatmap(false);
+                frontierService.resumeUpdateState();
+              }}
             >
               Back
             </button>

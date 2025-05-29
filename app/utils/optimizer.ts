@@ -15,7 +15,8 @@ export function geneticOptimization(
     | "riskConstrained"
     | "returnConstrained" = "riskConstrained",
   minWeights?: number[],
-  maxWeights?: number[]
+  maxWeights?: number[],
+  isFrontier = false
 ): Portfolio {
   // Use default constraints if not provided
   const patience = 18; // Number of generations to wait before stopping if no improvement
@@ -24,7 +25,6 @@ export function geneticOptimization(
   let bestFitness = -Infinity;
   let generationsWithoutImprovement = 0;
   let lastBestFitness = -Infinity;
-  let weightsConstraint = false;
 
   // Set default minWeights and maxWeights dynamically if not provided
   if (!minWeights || minWeights.length === 0) {
@@ -78,22 +78,24 @@ export function geneticOptimization(
     // Sort by fitness
     population.sort((a, b) => b.fitness - a.fitness);
     // Check for early stopping
-    bestFitness = population[0].fitness;
-    const improvement = bestFitness - lastBestFitness;
+    if (isFrontier) {
+      bestFitness = population[0].fitness;
+      const improvement = bestFitness - lastBestFitness;
 
-    if (improvement < minImprovement) {
-      generationsWithoutImprovement++;
-      if (generationsWithoutImprovement >= patience) {
-        console.log(
-          `Early stopping at generation ${gen} due to no improvement`
-        );
-        break;
+      if (improvement < minImprovement) {
+        generationsWithoutImprovement++;
+        if (generationsWithoutImprovement >= patience) {
+          console.log(
+            `Early stopping at generation ${gen} due to no improvement`
+          );
+          break;
+        }
+      } else {
+        generationsWithoutImprovement = 0;
       }
-    } else {
-      generationsWithoutImprovement = 0;
-    }
 
-    lastBestFitness = bestFitness;
+      lastBestFitness = bestFitness;
+    }
 
     // Select top performers
     const elites = population.slice(0, Math.floor(populationSize * 0.2));

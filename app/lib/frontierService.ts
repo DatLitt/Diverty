@@ -4,6 +4,7 @@ class FrontierService {
   private isPaused = false;
   private isRunning = false;
   private abortController: AbortController | null = null;
+  private isUpdateState = true;
 
   public async fetchFrontierSequentially(
     numPoints: number,
@@ -56,6 +57,9 @@ class FrontierService {
 
         if (portfolio) {
           frontier.push(portfolio);
+          if (this.isUpdateState) {
+            setFrontier([...frontier]);
+          }
         }
       }
       frontier.push(maxReturn);
@@ -89,6 +93,7 @@ class FrontierService {
           constraintValue,
           minWeights: [],
           maxWeights: [],
+          isFrontier: true, // Always true for frontier calculations
         }),
         signal,
       });
@@ -125,6 +130,14 @@ class FrontierService {
       this.abortController.abort();
       this.abortController = null;
     }
+  }
+
+  public stopUpdateState() {
+    this.isUpdateState = false;
+  }
+
+  public resumeUpdateState() {
+    this.isUpdateState = true;
   }
 }
 

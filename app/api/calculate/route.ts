@@ -13,6 +13,7 @@ export async function POST(request: Request) {
       constraintValue,
       minWeights,
       maxWeights,
+      isFrontier,
     } = body;
     console.log("minWeights:", minWeights);
     console.log("maxWeights:", maxWeights);
@@ -26,7 +27,8 @@ export async function POST(request: Request) {
       constraintValue,
       optimizationType,
       minWeights,
-      maxWeights
+      maxWeights,
+      isFrontier
     );
 
     return NextResponse.json(bestPortfolio);
