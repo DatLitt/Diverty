@@ -128,7 +128,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+
   gap: 20px;
 }
 
@@ -151,44 +151,86 @@
   justify-content: space-between;
   align-items: center;
 }
+.selectedStocks {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+
+ 
+}
+
 .stockTable {
   width: 100%;
-  border-collapse: collapse;
+  height: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
 }
+
+.stockTable thead {
+  background-color: var(--neutral-200);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.stockTable tbody {
+  display: block;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 30%; /* Adjust this value as needed */
+}
+
+.stockTable thead tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
 .stockTable tbody tr {
-  height: fit-content;
+  display: table;
+  width: 100%;
+  table-layout: fixed;
 }
+
 .stockTable th,
 .stockTable td {
   text-align: left;
   padding: 12px 16px;
   border-bottom: 1px solid var(--border);
-  height: 100%;
+  width: 25%; /* Adjust based on number of columns (100% / 4 columns) */
 }
 
+/* For the last column (action buttons) */
 .stockTable th:last-child,
 .stockTable td:last-child {
   text-align: right;
 }
 
-.stockTable th {
-  background-color: #f9f9f9;
-  font-weight: 600;
+/* Custom scrollbar styling */
+.stockTable tbody::-webkit-scrollbar {
+  width: 8px;
 }
+
+.stockTable tbody::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.stockTable tbody::-webkit-scrollbar-thumb {
+  background-color: var(--text-100);
+  border-radius: 4px;
+}
+
+.stockTable tbody::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-200);
+}
+
 .MuiInputBase-root {
   height: 40px !important;
   color: red;
   display: flex;
   gap: 20px;
 }
-.selectedStocks {
-  width: 100%;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  overflow-x: auto;
-}
+
 .stockList {
   width: 100%;
   list-style: none;
@@ -336,6 +378,10 @@
   border: none;
   border-bottom: 1px solid var(--border);
   padding-left: 10px;
+}
+
+.confirmButton {
+
 }
 
 @media (max-width: 480px) {

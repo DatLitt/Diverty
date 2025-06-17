@@ -604,7 +604,7 @@ export default function Step1({
 
         <button
           disabled={isFetching || selectedStocks.length === 0}
-          className="primaryButton"
+          className={`${styles.confirmButton} primaryButton`}
           onClick={async () => {
             await handleStocksData(selectedStocks.map((s) => s.symbol));
             setPortfolio({
