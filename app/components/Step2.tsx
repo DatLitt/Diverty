@@ -66,7 +66,7 @@ export default function Step2({
   const covMat = covarianceMatrix(returns);
   const labels = data.map((stock) => stock.ticker);
   const correlationMatrix = calculateCorrelation(returns);
-  const frontierPoints = 50;
+  const frontierPoints = 100;
 
   useEffect(() => {
     frontierService.resumeUpdateState();
@@ -628,7 +628,11 @@ export default function Step2({
               }}
               disabled={isFrontierLoading}
             >
-              {isFrontierLoading ? "Loading Frontier..." : "Efficient Frontier"}
+              {isFrontierLoading
+                ? `Efficient Frontier (${Math.floor(
+                    (frontier.length / frontierPoints) * 100
+                  )}%)`
+                : "Efficient Frontier"}
             </button>
           </div>
           <div className={styles.selectedStocks}>

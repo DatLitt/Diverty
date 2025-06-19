@@ -40,6 +40,7 @@ class FrontierService {
       setFrontier([...frontier]);
 
       for (let i = 1; i < numPoints - 1; i++) {
+        if (frontier.length === 0) return;
         while (this.isPaused) {
           await new Promise((resolve) => setTimeout(resolve, 100)); // Pause loop
         }
