@@ -4,24 +4,22 @@ class FrontierService {
   private isPaused = false;
   private isRunning = false;
   private abortController: AbortController | null = null;
-  private isAborting = false;
   private isUpdateState = true;
 
   public async fetchFrontierSequentially(
     numPoints: number,
     meanRets: number[],
     covMat: number[][],
-    setFrontier: (data: Portfolio[]) => void
+    setFrontier: React.Dispatch<React.SetStateAction<Portfolio[]>>
   ) {
     if (this.isRunning) {
-      console.warn(
-        "FrontierService already running. Stopping the previous one."
-      );
-      this.abortFetching(); // Safely abort previous task
-      await new Promise((resolve) => setTimeout(resolve, 10)); // Optional: wait for cleanup
+      this.stopFetching(); // Stop any ongoing fetch before starting a new one
+      await new Promise((resolve) => setTimeout(resolve, 40)); // wait for cleanup
+      setFrontier([]); // Clear previous frontier
     }
-    const frontier: Portfolio[] = [];
+
     this.isRunning = true;
+    const frontier: Portfolio[] = [];
     this.abortController = new AbortController(); // Reset AbortController
 
     try {
@@ -46,12 +44,7 @@ class FrontierService {
 
       frontier.push(minReturn);
       setFrontier([...frontier]);
-      if (this.isAborting) {
-        setFrontier([]);
-        return;
-      }
       for (let i = 1; i < numPoints - 1; i++) {
-        if (this.isAborting) return;
         while (this.isPaused) {
           await new Promise((resolve) => setTimeout(resolve, 100)); // Pause loop
         }
@@ -76,10 +69,6 @@ class FrontierService {
       }
       frontier.push(maxReturn);
       setFrontier([...frontier]);
-      if (this.isAborting) {
-        setFrontier([]);
-        return;
-      }
     } catch (error) {
       console.error("Error fetching frontier:", error);
     } finally {
@@ -146,22 +135,6 @@ class FrontierService {
       this.abortController.abort();
       this.abortController = null;
     }
-  }
-
-  public abortFetching() {
-    console.log("Aborting and destroying service...");
-    this.isAborting = true;
-    this.isRunning = false;
-    this.isPaused = false;
-    this.isUpdateState = true;
-
-    if (this.abortController) {
-      this.abortController.abort(); // Cancel ongoing fetch
-      this.abortController = null;
-    }
-
-    // Optional: if you want to allow reuse without re-instantiating
-    this.isAborting = false;
   }
 
   public stopUpdateState() {
