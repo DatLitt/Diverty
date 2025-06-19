@@ -4,6 +4,7 @@ class FrontierService {
   private isPaused = false;
   private isRunning = false;
   private abortController: AbortController | null = null;
+  private isAborting = false;
   private isUpdateState = true;
 
   public async fetchFrontierSequentially(
@@ -12,6 +13,13 @@ class FrontierService {
     covMat: number[][],
     setFrontier: (data: Portfolio[]) => void
   ) {
+    if (this.isRunning) {
+      console.warn(
+        "FrontierService already running. Stopping the previous one."
+      );
+      this.abortFetching(); // Safely abort previous task
+      await new Promise((resolve) => setTimeout(resolve, 10)); // Optional: wait for cleanup
+    }
     const frontier: Portfolio[] = [];
     this.isRunning = true;
     this.abortController = new AbortController(); // Reset AbortController
@@ -38,9 +46,12 @@ class FrontierService {
 
       frontier.push(minReturn);
       setFrontier([...frontier]);
-
+      if (this.isAborting) {
+        setFrontier([]);
+        return;
+      }
       for (let i = 1; i < numPoints - 1; i++) {
-        if (frontier.length === 0) return;
+        if (this.isAborting) return;
         while (this.isPaused) {
           await new Promise((resolve) => setTimeout(resolve, 100)); // Pause loop
         }
@@ -65,6 +76,10 @@ class FrontierService {
       }
       frontier.push(maxReturn);
       setFrontier([...frontier]);
+      if (this.isAborting) {
+        setFrontier([]);
+        return;
+      }
     } catch (error) {
       console.error("Error fetching frontier:", error);
     } finally {
@@ -131,6 +146,22 @@ class FrontierService {
       this.abortController.abort();
       this.abortController = null;
     }
+  }
+
+  public abortFetching() {
+    console.log("Aborting and destroying service...");
+    this.isAborting = true;
+    this.isRunning = false;
+    this.isPaused = false;
+    this.isUpdateState = true;
+
+    if (this.abortController) {
+      this.abortController.abort(); // Cancel ongoing fetch
+      this.abortController = null;
+    }
+
+    // Optional: if you want to allow reuse without re-instantiating
+    this.isAborting = false;
   }
 
   public stopUpdateState() {

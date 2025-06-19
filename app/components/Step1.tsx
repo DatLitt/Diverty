@@ -8,6 +8,7 @@ import styles from "../portfolio/page.module.css";
 import { useEffect, useRef, useState } from "react";
 import { StockDetails } from "../types/test";
 import { useData } from "../context/DataContext";
+import { frontierService } from "../lib/frontierService";
 import { calculateCorrelation, calculateReturns } from "../utils/mpt";
 
 export default function Step1({
