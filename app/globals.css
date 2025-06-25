@@ -16,6 +16,7 @@ body {
   max-width: 100vw;
   overflow-x: hidden;
   min-height: 100vh;
+  scroll-behavior: smooth;
 }
 
 /* Phone: up to 480px wide */
@@ -73,6 +74,9 @@ body {
   color: var(--neutral-100);
   font-size: 1.2rem;
   font-family: "Jura";
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .primaryButton:hover {
   background-color: var(--accent);

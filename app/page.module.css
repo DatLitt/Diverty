@@ -15,6 +15,55 @@
   gap: 64px;
   font-family: var(--font-geist-sans);
 }
+.home {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.introduction {
+  display: flex;
+  /* justify-content: center; */
+  align-items: center;
+  flex-direction: column;
+  height: calc(100vh);
+  gap: 20px;
+}
+.slogan {
+  max-width: 500px;
+  text-align: center;
+}
+.slogan2 {
+  max-width: 600px;
+  text-align: center;
+  font-weight: 100;
+  font-size: 1rem;
+}
+.buttonWrapper {
+  display: flex;
+  gap: 30px;
+}
+.tutorial {
+  border: 1px solid var(--primary);
+  border-radius: 5px;
+  height: 40px;
+  padding: 5px 20px;
+  background-color: var(--neutral-200);
+  color: var(--primary);
+  font-size: 1.2rem;
+  font-family: "Jura";
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+}
+.tutorialWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 50px;
+}
 
 @media (prefers-color-scheme: dark) {
   .page {
