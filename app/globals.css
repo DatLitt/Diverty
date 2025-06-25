@@ -77,10 +77,12 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  transition: all 0.3s ease; /* Smooth transition */
 }
 .primaryButton:hover {
   background-color: var(--accent);
   cursor: pointer;
+  transform: scale(1.05);
 }
 .primaryButton:disabled {
   cursor: not-allowed;

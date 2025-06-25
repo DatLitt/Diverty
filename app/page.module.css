@@ -56,6 +56,12 @@
   justify-content: center;
   align-items: center;
   text-decoration: none;
+  transition: all 0.3s ease; /* Smooth transition */
+}
+
+.tutorial:hover {
+  transform: scale(1.05);
+  cursor: pointer;
 }
 .tutorialWrapper {
   display: flex;
