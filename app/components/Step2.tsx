@@ -224,13 +224,6 @@ export default function Step2({
         type: "category",
       },
       colors: ["#008FFB"],
-      colorScale: {
-        ranges: [
-          { from: 0, to: 0.3, color: "#FF4560", name: "Low" },
-          { from: 0.3, to: 0.7, color: "#FEB019", name: "Medium" },
-          { from: 0.7, to: 1, color: "#00E396", name: "High" },
-        ],
-      },
     } as ApexCharts.ApexOptions;
     return (
       <Chart

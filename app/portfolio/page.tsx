@@ -7,7 +7,7 @@ import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-
+import dayjs from "dayjs";
 import { useState } from "react";
 import Step1 from "../components/Step1";
 import Step2 from "../components/Step2";
@@ -36,6 +36,11 @@ const CustomTab = styled(Tab)(() => ({
 }));
 
 export default function Portfolio() {
+  const [startDate, setStartDate] = useState(
+    dayjs().subtract(5, "year").format("YYYY-MM-DD")
+  );
+  const [endDate, setEndDate] = useState(dayjs().format("YYYY-MM-DD"));
+  const [interval, setInterval] = useState("1wk");
   const [optimizationType, setOptimizationType] = useState<
     "riskConstrained" | "minRisk" | "returnConstrained" | "noRiskLimit"
   >("riskConstrained");
@@ -112,6 +117,12 @@ export default function Portfolio() {
                   setMaxWeights={setMaxWeights}
                   selectedStocks={selectedStocks}
                   setSelectedStocks={setSelectedStocks}
+                  startDate={startDate}
+                  setStartDate={setStartDate}
+                  endDate={endDate}
+                  setEndDate={setEndDate}
+                  interval={interval}
+                  setInterval={setInterval}
                 />
               </TabPanel>
               <TabPanel value="2" sx={{ padding: 0, height: "100%" }}>

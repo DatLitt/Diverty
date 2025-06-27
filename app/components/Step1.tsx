@@ -17,7 +17,19 @@ export default function Step1({
   setMinWeights,
   selectedStocks,
   setSelectedStocks,
+  startDate,
+  setStartDate,
+  endDate,
+  setEndDate,
+  interval,
+  setInterval,
 }: {
+  startDate: string;
+  endDate: string;
+  interval: string;
+  setStartDate: (value: string) => void;
+  setEndDate: (value: string) => void;
+  setInterval: (value: string) => void;
   setValue: (value: string) => void;
   setMinWeights: (weights: number[]) => void;
   setMaxWeights: (weights: number[]) => void;
@@ -26,13 +38,8 @@ export default function Step1({
     stocks: StockDetails[] | ((prev: StockDetails[]) => StockDetails[])
   ) => void;
 }) {
-  const [startDate, setStartDate] = useState(
-    dayjs().subtract(5, "year").format("YYYY-MM-DD")
-  );
-  const [endDate, setEndDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [dateError, setDateError] = useState<string | null>(null);
-  const [interval, setInterval] = useState("1wk");
-  const [searchQuery, setSearchQuery] = useState("Apple");
+  const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -435,6 +442,7 @@ export default function Step1({
             {showDropdown && (
               <ul className={[styles.stockList, styles.dropdown].join(" ")}>
                 {isSearching && <Spinner />}
+                {!searchResults.length && <span>No stock found.</span>}
                 {searchResults
                   .filter((stock) => stock.isYahooFinance === true)
                   .filter((stock) => stock.symbol !== undefined)
