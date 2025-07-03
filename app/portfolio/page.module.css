@@ -368,7 +368,10 @@
   border-bottom: 1px solid var(--border);
   padding-left: 10px;
 }
-
+.buttonGroup {
+  display: flex;
+  gap: 20px;
+}
 .confirmButton {
 }
 

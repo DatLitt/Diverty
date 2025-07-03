@@ -15,8 +15,7 @@ export default function Home() {
           style={{ height: "auto" }} // auto-adjusts height to natural ratio
         />
         <h1 className={styles.slogan}>
-          {" "}
-          Build Smarter Investment Portfolios with Diverty
+          Divide your property wisely with Diverty.
         </h1>
         {/* <h2 className={styles.slogan2}>
         Optimize your investments with data-driven insights, efficient frontier

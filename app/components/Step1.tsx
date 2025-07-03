@@ -483,7 +483,7 @@ export default function Step1({
             )}
           </div>
         </div>
-        {insufficientDataStocks.length > 0 && (
+        {insufficientDataStocks.length > 0 && undefinedStocks.length === 0 && (
           <div className={styles.popup}>
             <div className={styles.popupContent}>
               <h3>Warning: Incomplete Data</h3>
@@ -536,17 +536,19 @@ export default function Step1({
                   <li key={stock.symbol}>{stock.shortname} </li>
                 ))}
               </ul>
-              <button
-                onClick={() =>
-                  undefinedStocks.forEach((stock) => {
-                    handleStockSelect(stock);
-                    setUndefinedStocks([]);
-                  })
-                }
-              >
-                Delete all
-              </button>
-              <button onClick={() => setUndefinedStocks([])}>Close</button>
+              <div className={styles.buttonGroup}>
+                <button
+                  onClick={() =>
+                    undefinedStocks.forEach((stock) => {
+                      handleStockSelect(stock);
+                      setUndefinedStocks([]);
+                    })
+                  }
+                >
+                  Delete all
+                </button>
+                <button onClick={() => setUndefinedStocks([])}>Close</button>
+              </div>
             </div>
           </div>
         )}
