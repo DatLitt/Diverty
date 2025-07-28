@@ -50,6 +50,38 @@ body {
   padding: 0;
   margin: 0;
 }
+.contributors-button {
+  border: none;
+  background-color: transparent;
+  &:hover {
+    cursor: pointer;
+  }
+}
+.contributors-container {
+  position: relative;
+  width: 30%;
+  display: inline-block;
+}
+
+.contributors-popup {
+  display: none;
+  position: absolute;
+  top: -10px;
+  left: 40px;
+  background: white;
+  border: 1px solid var(--border);
+  padding: 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  width: max-content;
+}
+
+/* Show popup on hover */
+.contributors-container:hover .contributors-popup,
+.contributors-container:focus-within .contributors-popup {
+  display: block;
+}
 
 .header {
   position: absolute;
@@ -63,6 +95,19 @@ body {
   justify-content: center;
   color: var(--blue-2);
   border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  padding: 0 60px;
+}
+.contributors {
+  width: 30%;
+}
+.title {
+  width: 30%;
+}
+.logo {
+  height: 70%;
+  width: auto;
 }
 
 .primaryButton {
