@@ -15,7 +15,10 @@ export function Header() {
       </div>
 
       <h1 className="title">Diverty</h1>
-      <img src="/VGU-logo.png" alt="VGU Logo" className="logo" />
+      <div className="logo-holder">
+        <img src="/team-logo.png" alt="VGU Logo" className="logo1" />
+        <img src="/VGU-logo.png" alt="VGU Logo" className="logo2" />
+      </div>
     </header>
   );
 }

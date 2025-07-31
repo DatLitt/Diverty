@@ -168,7 +168,8 @@
 }
 
 .stockTable thead {
-  background-color: var(--neutral-200);
+  background-color: #67bb7f;
+  /* color: var(--neutral-100); */
   position: sticky;
   top: 0;
   z-index: 10;
