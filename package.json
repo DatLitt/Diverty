@@ -18,7 +18,7 @@
     "apexcharts": "^4.5.0",
     "dayjs": "^1.11.13",
     "mathjs": "^14.3.1",
-    "next": "15.2.4",
+    "next": "15.2.8",
     "react": "^19.0.0",
     "react-apexcharts": "^1.7.0",
     "react-dom": "^19.0.0",
