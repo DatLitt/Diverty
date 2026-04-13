@@ -23,7 +23,7 @@
     "react-apexcharts": "^1.7.0",
     "react-dom": "^19.0.0",
     "react-google-charts": "^5.2.1",
-    "yahoo-finance2": "^2.13.3"
+    "yahoo-finance2": "^3.14.0"
   },
   "devDependencies": {
     "@types/node": "^20",

@@ -35,7 +35,7 @@ export default function Step1({
   setMaxWeights: (weights: number[]) => void;
   selectedStocks: StockDetails[];
   setSelectedStocks: (
-    stocks: StockDetails[] | ((prev: StockDetails[]) => StockDetails[])
+    stocks: StockDetails[] | ((prev: StockDetails[]) => StockDetails[]),
   ) => void;
 }) {
   const [dateError, setDateError] = useState<string | null>(null);
@@ -98,7 +98,7 @@ export default function Step1({
           (stock: any) =>
             stock?.value?.ticker &&
             stock?.value?.data &&
-            stock.value.data.length > 0 // Only consider stocks with actual data
+            stock.value.data.length > 0, // Only consider stocks with actual data
         )
         .map((stock: any) => stock.value.ticker);
 
@@ -106,8 +106,9 @@ export default function Step1({
       const undefinedStockDetails: StockDetails[] = selectedStocks
         .filter((stock) => {
           const stockData = rawData.stocks.find(
-            (s: any) => s?.value?.ticker === stock.symbol
+            (s: any) => s?.value?.ticker === stock.symbol,
           );
+
           return !stockData?.value?.data?.length; // Returns true for undefined, null, or empty array
         })
         .map((stock) => {
@@ -125,7 +126,7 @@ export default function Step1({
           (stock: any) =>
             stock.value !== undefined &&
             stock.value.data &&
-            stock.value.data.length > 0
+            stock.value.data.length > 0,
         )
         .map((stock: any) => stock.value);
       setTempValidData(validData);
@@ -136,12 +137,12 @@ export default function Step1({
         (stock: any) =>
           stock.value !== undefined &&
           stock.value.data &&
-          stock.value.data.length > 0
+          stock.value.data.length > 0,
       );
 
       // Find the stock with the most data points
       const maxDataPoints = Math.max(
-        ...validStocks.map((stock: any) => stock.value.data.length)
+        ...validStocks.map((stock: any) => stock.value.data.length),
       );
       const threshold = maxDataPoints * 0.8; // 80% threshold
       console.log("Max data points:", threshold);
@@ -159,7 +160,7 @@ export default function Step1({
           exchange: stock.exchange,
           quoteType: stock.quoteType,
           dataPoints: validStocks.find(
-            (s: any) => s.value.ticker === stock.symbol
+            (s: any) => s.value.ticker === stock.symbol,
           )?.value.data.length,
           maxDataPoints,
         }));
@@ -177,7 +178,7 @@ export default function Step1({
           prev.map((item, index) => ({
             ...item,
             shortName: selectedStocks[index]?.shortname,
-          }))
+          })),
         );
         // Initialize weight arrays with default values when new data is loaded
         setMinWeights(new Array(validData.length).fill(0));
@@ -243,7 +244,7 @@ export default function Step1({
 
     try {
       const response = await fetch(
-        `/api/search?query=${encodeURIComponent(searchQuery)}`
+        `/api/search?query=${encodeURIComponent(searchQuery)}`,
       );
       if (!response.ok) {
         throw new Error("Search request failed");
@@ -271,12 +272,12 @@ export default function Step1({
     try {
       if (
         !selectedStocks.some(
-          (s) => s.symbol === stock.symbol && s.quoteType === stock.quoteType
+          (s) => s.symbol === stock.symbol && s.quoteType === stock.quoteType,
         )
       ) {
         console.log("fetched");
         const response = await fetch(
-          `/api/selectStock?symbol=${encodeURIComponent(stock.symbol)}`
+          `/api/selectStock?symbol=${encodeURIComponent(stock.symbol)}`,
         );
         if (response.ok) {
           data = await response.json();
@@ -293,12 +294,12 @@ export default function Step1({
 
       setSelectedStocks((prev) => {
         const exists = prev.some(
-          (s) => s.symbol === stock.symbol && s.quoteType === stock.quoteType
+          (s) => s.symbol === stock.symbol && s.quoteType === stock.quoteType,
         );
 
         if (exists) {
           return prev.filter(
-            (s) => s.symbol !== stock.symbol || s.quoteType !== stock.quoteType
+            (s) => s.symbol !== stock.symbol || s.quoteType !== stock.quoteType,
           );
         }
         return [
@@ -446,22 +447,25 @@ export default function Step1({
                 {searchResults
                   .filter((stock) => stock.isYahooFinance === true)
                   .filter((stock) => stock.symbol !== undefined)
-                  .reduce((unique, stock) => {
-                    const existingStock = unique.find(
-                      (s: { symbol: string; quoteType: string }) =>
-                        s.symbol === stock.symbol
-                    );
-                    if (!existingStock) {
-                      unique.push(stock);
-                    } else if (
-                      existingStock.quoteType !== "EQUITY" &&
-                      stock.quoteType === "EQUITY"
-                    ) {
-                      // Replace non-EQUITY with EQUITY version if found
-                      unique[unique.indexOf(existingStock)] = stock;
-                    }
-                    return unique;
-                  }, [] as typeof searchResults)
+                  .reduce(
+                    (unique, stock) => {
+                      const existingStock = unique.find(
+                        (s: { symbol: string; quoteType: string }) =>
+                          s.symbol === stock.symbol,
+                      );
+                      if (!existingStock) {
+                        unique.push(stock);
+                      } else if (
+                        existingStock.quoteType !== "EQUITY" &&
+                        stock.quoteType === "EQUITY"
+                      ) {
+                        // Replace non-EQUITY with EQUITY version if found
+                        unique[unique.indexOf(existingStock)] = stock;
+                      }
+                      return unique;
+                    },
+                    [] as typeof searchResults,
+                  )
                   .map(
                     (stock: {
                       symbol: string;
@@ -477,7 +481,7 @@ export default function Step1({
                       >
                         {stock.shortname} ({stock.symbol})
                       </li>
-                    )
+                    ),
                   )}
               </ul>
             )}

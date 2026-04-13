@@ -1,17 +1,18 @@
-import yahooFinance from "yahoo-finance2";
+import YahooFinance from "yahoo-finance2";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  const yahooFinance = new YahooFinance();
   const { searchParams } = new URL(request.url);
   const symbol = searchParams.get("symbol"); // e.g., AAPL
 
   if (!symbol) {
     return NextResponse.json(
       { error: "Symbol parameter is required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
-
+  console.log("hehe", symbol);
   try {
     const quote = await yahooFinance.quote(symbol);
     console.log("Quote:", quote);
@@ -36,7 +37,7 @@ export async function GET(request: Request) {
     console.error("Yahoo Finance API error:", error);
     return NextResponse.json(
       { error: "Failed to fetch data" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

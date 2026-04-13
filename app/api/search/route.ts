@@ -1,14 +1,14 @@
-import yahooFinance from "yahoo-finance2";
+import YahooFinance from "yahoo-finance2";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("query");
-
+  const yahooFinance = new YahooFinance();
   if (!query) {
     return NextResponse.json(
       { error: "Query parameter is required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     console.error("Yahoo Finance API error:", error);
     return NextResponse.json(
       { error: "Failed to fetch data" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,4 +1,4 @@
-import yahooFinance from "yahoo-finance2";
+import YahooFinance from "yahoo-finance2";
 import { cache } from "react";
 
 export const getStockData = cache(
@@ -6,10 +6,10 @@ export const getStockData = cache(
     stockSymbols: string[],
     startDate: string,
     endDate: string,
-    interval: "1d" | "1wk" | "1mo"
+    interval: "1d" | "1wk" | "1mo",
   ) => {
     const tickers = stockSymbols.length > 0 ? stockSymbols : [];
-
+    const yahooFinance = new YahooFinance();
     const data = await Promise.allSettled(
       tickers.map(async (ticker) => {
         const result = await yahooFinance.historical(ticker, {
@@ -36,9 +36,9 @@ export const getStockData = cache(
         });
 
         return { ticker, data: processed };
-      })
+      }),
     );
 
     return data;
-  }
+  },
 );
